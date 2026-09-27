@@ -1,0 +1,2753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MentorConnect · AI &amp; ML Mentoring Portal</title>
+<style>
+  :root{
+    --ink:#141b33; --ink2:#5b6784; --line:#e6e9f5; --card:#ffffff;
+    --pri:#6d5efc; --pri2:#a855f7; --pink:#ec4899; --teal:#14b8a6; --amber:#f59e0b;
+    --green:#10b981; --red:#ef4444; --blue:#3b82f6;
+    --r:18px; --shadow:0 12px 34px rgba(80,70,180,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink); line-height:1.55; -webkit-font-smoothing:antialiased; min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 8% -5%, #e0e7ff 0%, rgba(224,231,255,0) 60%),
+      radial-gradient(800px 480px at 100% 0%, #fce7f3 0%, rgba(252,231,243,0) 55%),
+      radial-gradient(700px 500px at 50% 100%, #ccfbf1 0%, rgba(204,251,241,0) 60%),
+      #f6f7fd;
+    background-attachment:fixed;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:18px}
+  .screen{display:none;animation:fade .3s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .hide{display:none!important}
+  .spacer{flex:1}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  /* ---------- top bar ---------- */
+  .topbar{
+    background:linear-gradient(110deg,#6d5efc,#a855f7 45%,#ec4899);
+    color:#fff;padding:13px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    box-shadow:0 8px 24px rgba(109,94,252,.28);position:sticky;top:0;z-index:20
+  }
+  .logo{width:40px;height:40px;border-radius:13px;background:rgba(255,255,255,.2);
+    display:grid;place-items:center;font-size:21px}
+  .brand{font-weight:800;font-size:17px;letter-spacing:.2px}
+  .brand small{display:block;font-weight:500;font-size:11.5px;opacity:.9}
+  .pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);
+    padding:7px 13px;border-radius:999px;font-size:12.5px;cursor:pointer;color:#fff;font-family:inherit}
+  .pill:hover{background:rgba(255,255,255,.3)}
+  /* ---------- cards ---------- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow);padding:22px}
+  .happy{border-top:5px solid transparent;border-image:linear-gradient(90deg,#6d5efc,#ec4899,#f59e0b) 1}
+  h1{font-size:25px;margin:0 0 6px;letter-spacing:-.2px}
+  h2{font-size:19px;margin:0 0 10px}
+  h3{font-size:12.5px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.9px;color:var(--pri)}
+  .muted{color:var(--ink2);font-size:13.5px}
+  label{display:block;font-size:13px;font-weight:700;margin:13px 0 5px;color:#2b3357}
+  input[type=text],input[type=password],input[type=date],select,textarea{
+    width:100%;padding:12px 14px;border:1.6px solid var(--line);border-radius:13px;font-size:14.6px;
+    font-family:inherit;background:#fdfdff;color:var(--ink);outline:none;transition:.15s
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--pri);box-shadow:0 0 0 4px rgba(109,94,252,.14);background:#fff}
+  .btn{background:linear-gradient(110deg,#6d5efc,#a855f7);color:#fff;border:0;border-radius:13px;
+    padding:12px 20px;font-size:14.6px;font-weight:700;cursor:pointer;font-family:inherit;
+    display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(109,94,252,.3)}
+  .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn.pink{background:linear-gradient(110deg,#ec4899,#f97316);box-shadow:0 8px 20px rgba(236,72,153,.3)}
+  .btn.teal{background:linear-gradient(110deg,#14b8a6,#0ea5e9);box-shadow:0 8px 20px rgba(20,184,166,.3)}
+  .btn.ghost{background:#fff;color:var(--pri);border:1.6px solid #d8d4ff;box-shadow:none}
+  .btn.grey{background:#f1f2fa;color:#3b4568;border:1.6px solid var(--line);box-shadow:none}
+  .btn.sm{padding:8px 13px;font-size:13px;border-radius:11px}
+  .btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;transform:none}
+  .note{border-radius:14px;padding:13px 15px;font-size:13.2px;background:#eef2ff;border:1.6px solid #c7d2fe;color:#3730a3}
+  .note.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+  .note.bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+  .note.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+  .avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;
+    font-size:14px;flex:none}
+  /* ---------- landing ---------- */
+  .hero{background:linear-gradient(115deg,#6d5efc,#a855f7 50%,#ec4899);border-radius:24px;color:#fff;
+    padding:26px 26px;box-shadow:0 18px 40px rgba(109,94,252,.3);position:relative;overflow:hidden}
+  .hero:after{content:"";position:absolute;width:320px;height:320px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.35),rgba(255,255,255,0) 70%);right:-90px;top:-120px}
+  .hero h1{font-size:30px;margin-bottom:4px}
+  .rolecard{background:rgba(255,255,255,.16);border:1.6px solid rgba(255,255,255,.35);border-radius:16px;padding:14px}
+  .rolecard select{background:#fff;color:var(--ink);border:0;font-weight:700;font-size:15px}
+  .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  @media(max-width:900px){.feat{grid-template-columns:1fr 1fr}}
+  @media(max-width:640px){.feat{grid-template-columns:1fr}}
+  .fcard{background:#fff;border-radius:var(--r);padding:16px;box-shadow:var(--shadow);border-top:5px solid}
+  .fcard b{display:block;font-size:15px;margin-bottom:3px}
+  /* ---------- chat ---------- */
+  .chatcard{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);display:flex;flex-direction:column;
+    height:calc(100vh - 160px);min-height:540px;overflow:hidden;border:1px solid var(--line)}
+  .chathead{padding:13px 16px;background:linear-gradient(110deg,#f5f3ff,#fdf2f8,#ecfeff)}
+  .chathead .l1{display:flex;align-items:center;gap:11px}
+  .bubblepic{width:42px;height:42px;border-radius:50%;background:linear-gradient(110deg,#6d5efc,#ec4899);
+    display:grid;place-items:center;font-size:20px}
+  .prog{height:9px;background:#eceafd;border-radius:99px;margin-top:10px;overflow:hidden}
+  .prog i{display:block;height:100%;width:0;border-radius:99px;transition:width .4s ease;
+    background:linear-gradient(90deg,#6d5efc,#ec4899,#f59e0b)}
+  .stream{flex:1;overflow-y:auto;padding:18px 16px 10px;
+    background:radial-gradient(900px 320px at 100% 0%,#f5f3ff 0%,transparent 60%),
+              radial-gradient(700px 300px at 0% 100%,#ecfeff 0%,transparent 60%),#fff}
+  .msg{display:flex;gap:10px;margin-bottom:13px}
+  .msg .bub{padding:12px 15px;border-radius:16px;font-size:14.8px;max-width:min(680px,84%);
+    white-space:pre-wrap;word-wrap:break-word}
+  .msg.bot .avatar{background:linear-gradient(110deg,#6d5efc,#ec4899);color:#fff;font-size:16px}
+  .msg.bot .bub{background:#f4f5fb;border:1.4px solid #e8e9f5;border-top-left-radius:5px;color:#1b2340}
+  .msg.bot .bub.warm{background:linear-gradient(110deg,#fff1f7,#f0f4ff);border-color:#ffd9ea}
+  .msg.me{justify-content:flex-end}
+  .msg.me .bub{background:linear-gradient(110deg,#6d5efc,#a855f7);color:#fff;border-top-right-radius:5px;
+    box-shadow:0 8px 18px rgba(109,94,252,.25)}
+  .secbar{display:flex;align-items:center;gap:10px;margin:22px 0 12px;font-size:11.8px;font-weight:800;
+    letter-spacing:1px;text-transform:uppercase}
+  .secbar .dot{width:10px;height:10px;border-radius:50%}
+  .secbar:after{content:"";height:2px;flex:1;border-radius:2px;background:currentColor;opacity:.18}
+  .hint{font-size:12.4px;color:var(--ink2);font-style:italic}
+  .typing{display:flex;gap:4px;padding:14px 16px;background:#f4f5fb;border-radius:16px;border-top-left-radius:5px;width:max-content}
+  .typing span{width:7px;height:7px;border-radius:50%;background:#a5a3d6;animation:bounce 1.1s infinite}
+  .typing span:nth-child(2){animation-delay:.15s}
+  .typing span:nth-child(3){animation-delay:.3s}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-6px);opacity:1}}
+  .composer{border-top:1.6px solid var(--line);padding:14px 16px;background:linear-gradient(110deg,#fbfbff,#fdf7fb)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1.6px solid #ddd9f7;background:#fff;border-radius:999px;padding:10px 16px;font-size:13.9px;
+    cursor:pointer;font-family:inherit;color:#2b3357;transition:.15s}
+  .chip:hover{border-color:var(--pri);color:var(--pri);background:#f7f5ff}
+  .chip.on{background:linear-gradient(110deg,#6d5efc,#a855f7);color:#fff;border-color:transparent;
+    box-shadow:0 6px 14px rgba(109,94,252,.3)}
+  .scale{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+  .scale.fun{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;width:100%}
+  .scale .chip{min-width:46px;justify-content:center;text-align:center}
+  .funcard{border:2px solid #ddd9f7;background:#fff;border-radius:16px;padding:12px 14px;cursor:pointer;
+    font-family:inherit;color:#2b3357;text-align:center;transition:all .18s ease;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:4px;box-shadow:0 3px 10px rgba(109,94,252,.06)}
+  .funcard:hover{border-color:var(--pri);transform:translateY(-2px);background:#fbfaff;box-shadow:0 8px 18px rgba(109,94,252,.16)}
+  .funcard.on{background:linear-gradient(115deg,#6d5efc,#a855f7);color:#fff;border-color:transparent;
+    box-shadow:0 8px 20px rgba(109,94,252,.32);transform:scale(1.02)}
+  .funcard .f-emoji{font-size:26px;line-height:1;display:block}
+  .funcard .f-word{font-weight:700;font-size:13.6px;letter-spacing:-.1px}
+  .funcard .f-sub{font-size:11px;opacity:.78;line-height:1.2}
+  .slabels{display:flex;justify-content:space-between;font-size:11.6px;color:var(--ink2);margin-top:7px;max-width:540px}
+  .confirm-bar{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .btn-confirm{background:linear-gradient(110deg,#10b981,#14b8a6);color:#fff;border:0;border-radius:12px;
+    padding:10px 18px;font-size:13.8px;font-weight:700;cursor:pointer;font-family:inherit;
+    box-shadow:0 6px 16px rgba(16,185,129,.28);display:inline-flex;align-items:center;gap:6px}
+  .btn-confirm:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .gridrow{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .gridrow .lbl{min-width:195px;font-size:13.5px;font-weight:700}
+  .skips{font-size:12.6px;color:var(--ink2);margin-top:10px}
+  .skips button{background:none;border:0;color:var(--pri);text-decoration:underline;cursor:pointer;
+    font-size:12.6px;font-family:inherit;padding:0}
+  /* ---------- document / record sheet ---------- */
+  .doc{background:#fff;border-radius:14px;border:1.4px solid #dcd9f2;box-shadow:var(--shadow);padding:22px}
+  .doc-title{text-align:center;font-weight:800;letter-spacing:1.6px;font-size:16px}
+  .doc-sub{text-align:center;font-size:11.6px;color:var(--ink2);letter-spacing:.5px;margin-bottom:14px}
+  table.rec{width:100%;border-collapse:collapse;font-size:12.6px}
+  table.rec th,table.rec td{border:1.2px solid #b9b6d9;padding:7px 8px;vertical-align:top}
+  table.rec th{background:linear-gradient(110deg,#eef0ff,#fdf2f8);font-size:11.8px;text-align:center;
+    letter-spacing:.4px;text-transform:uppercase;color:#33306b}
+  table.rec td[contenteditable]{background:#fffef9}
+  table.rec td[contenteditable]:focus{outline:2px solid #a5b4fc;background:#fff}
+  .meta{width:100%;font-size:13px;margin-bottom:12px}
+  .meta td{padding:4px 8px;border:1.2px solid #e2dff5}
+  .meta td.k{background:#f7f6ff;font-weight:700;width:120px;color:#3b3670}
+  .flagrow{margin:10px 0 0}
+  .tag{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;margin:2px 4px 2px 0}
+  .tag.high{background:#fef2f2;color:#b91c1c;border:1.4px solid #fecaca}
+  .tag.med{background:#fff7ed;color:#9a3412;border:1.4px solid #fed7aa}
+  .tag.low{background:#eff6ff;color:#1d4ed8;border:1.4px solid #bfdbfe}
+  .tag.ok{background:#ecfdf5;color:#047857;border:1.4px solid #a7f3d0}
+  .tag.pri{background:#f5f3ff;color:#5b21b6;border:1.4px solid #ddd6fe}
+  /* ---------- tables / dashboard ---------- */
+  table.grid{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.grid th{text-align:left;background:linear-gradient(110deg,#f3f4ff,#fdf2f8);border-bottom:1.4px solid var(--line);
+    padding:11px 10px;font-size:11.6px;text-transform:uppercase;letter-spacing:.6px;color:#4b4680}
+  table.grid td{padding:10px;border-bottom:1px solid #f1f2fa;vertical-align:top}
+  table.grid tr:hover td{background:#fbfbff}
+  .stat{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}
+  @media(max-width:820px){.stat{grid-template-columns:repeat(2,1fr)}}
+  .stat .s{border-radius:16px;padding:14px 16px;color:#fff;box-shadow:var(--shadow)}
+  .stat .s b{display:block;font-size:24px;line-height:1.2}
+  .stat .s span{font-size:11.8px;opacity:.95}
+  .s1{background:linear-gradient(120deg,#6d5efc,#8b5cf6)}
+  .s2{background:linear-gradient(120deg,#10b981,#14b8a6)}
+  .s3{background:linear-gradient(120deg,#f59e0b,#f97316)}
+  .s4{background:linear-gradient(120deg,#ec4899,#f43f5e)}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0}
+  .toolbar input[type=text]{max-width:280px}
+  .qa{border-left:4px solid #ddd6fe;padding:2px 0 2px 12px;margin:0 0 13px;border-radius:2px}
+  .qa .qq{font-size:12.6px;font-weight:700;color:#6b7280}
+  .qa .aa{font-size:14.2px}
+  .modal{position:fixed;inset:0;background:rgba(20,27,51,.6);display:none;place-items:center;padding:16px;z-index:60}
+  .modal.on{display:grid}
+  .modal .box{background:#fff;border-radius:18px;padding:22px;max-width:820px;width:100%;max-height:88vh;overflow:auto}
+  textarea.raw{font-family:ui-monospace,Consolas,monospace;font-size:12px;height:240px}
+  .kv{display:flex;gap:8px;font-size:13.6px;margin-bottom:6px}
+  .kv b{min-width:170px;color:var(--ink2);font-weight:700}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(90px);
+    background:#141b33;color:#fff;padding:12px 20px;border-radius:13px;font-size:13.6px;opacity:0;
+    transition:.3s;z-index:90;box-shadow:0 12px 30px rgba(0,0,0,.3)}
+  .toast.on{transform:translateX(-50%);opacity:1}
+  .foot{text-align:center;font-size:12px;color:#8d93b5;padding:20px 0 28px}
+  details.rawqa{margin-top:16px}
+  details.rawqa summary{cursor:pointer;font-weight:700;color:var(--pri);font-size:13.5px}
+  .reportline{background:#f8f9ff;border:1.4px dashed #d8d4ff;border-radius:14px;padding:14px;font-size:13.7px;margin-bottom:10px}
+  @media print{
+    body{background:#fff}
+    .topbar,.noprint,.foot{display:none!important}
+    .doc{box-shadow:none;border:0;padding:0}
+    table.rec th{background:#eef0ff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">🎓</div>
+  <div class="brand">MentorConnect<small>AI &amp; ML · Student–Mentor Scheme</small></div>
+  <div class="spacer"></div>
+  <button class="pill hide" id="btnExitChat">Save &amp; exit</button>
+  <button class="pill hide" id="btnHome">Home</button>
+  <span class="pill hide" id="whoami"></span>
+</div>
+
+<div class="wrap">
+
+<!-- ============ LANDING (common page, role dropdown) ============ -->
+<section class="screen active" id="sc-home">
+  <div id="storeWarn"></div>
+
+  <div class="hero" style="margin-top:8px">
+    <h1>MentorConnect 🎓</h1>
+    <p style="margin:0 0 16px;opacity:.95;max-width:640px">A friendly mentoring chat for B.Tech students — your mentor gets a clear picture of how you are doing and a ready mentoring record. Everything you share stays between you and your mentor.</p>
+    <div class="row" style="align-items:flex-end">
+      <div class="rolecard">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;opacity:.9">I am a</div>
+        <select id="roleSel" style="min-width:230px;margin-top:7px">
+          <option value="student">Student</option>
+          <option value="mentor">Mentor</option>
+        </select>
+      </div>
+      <div style="font-size:12.5px;opacity:.92">Students: sign in with your name and register number.<br>Mentors: password protected.</div>
+    </div>
+  </div>
+
+  <!-- student login -->
+  <div id="paneStudent" style="margin-top:20px">
+    <div class="card happy" style="max-width:640px">
+      <h2>Student sign-in 🙂</h2>
+      <p class="muted">Just your name and your register number. No email, no OTP.</p>
+      <label for="sname">Your name</label>
+      <input type="text" id="sname" list="rosterNames" placeholder="Start typing… e.g. abhi" autocomplete="off">
+      <datalist id="rosterNames"></datalist>
+      <label for="spass">Password = your register number</label>
+      <input type="password" id="spass" placeholder="e.g. NCE24AM001" autocomplete="off">
+      <label for="ssem">Semester</label>
+      <select id="ssem"><option>S1</option><option>S2</option><option>S3</option><option>S4</option><option selected>S5</option><option>S6</option><option>S7</option><option>S8</option></select>
+      <div id="sloginErr" style="margin-top:12px"></div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn" id="doSlogin">Let's begin →</button>
+        <span class="muted">Forgot? Ask your mentor.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- mentor login -->
+  <div id="paneMentor" class="hide" style="margin-top:20px">
+    <div class="card happy" style="max-width:640px">
+      <h2>Mentor sign-in 🔐</h2>
+      <div id="mentorPaneBody"></div>
+    </div>
+  </div>
+
+  <div class="feat">
+    <div class="fcard" style="border-color:#6d5efc">
+      <b>💬 A conversation, not a form</b>
+      <span class="muted">Mitra chats, listens and replies to what you say — about family, studies, attendance, skills, career and wellbeing.</span>
+    </div>
+    <div class="fcard" style="border-color:#ec4899">
+      <b>🧭 A plan you own</b>
+      <span class="muted">Every session ends with your own action plan — problem, skill, one step, date and the help you want.</span>
+    </div>
+    <div class="fcard" style="border-color:#10b981">
+      <b>📘 A mentoring record</b>
+      <span class="muted">Your mentor gets a compact meeting register with discussions, suggestions and your response — in one file.</span>
+    </div>
+  </div>
+  <div class="foot">Works offline · single HTML file · records stay in this browser</div>
+</section>
+
+<!-- ============ SESSION MODE / RESUME ============ -->
+<section class="screen" id="sc-mode">
+  <div class="card happy" style="max-width:680px;margin:24px auto" id="modeCard"></div>
+</section>
+
+<!-- ============ CHAT ============ -->
+<section class="screen" id="sc-chat">
+  <div class="chatcard">
+    <div class="chathead">
+      <div class="l1">
+        <div class="bubblepic">🧑‍🏫</div>
+        <div>
+          <div style="font-weight:800;font-size:14.8px">Mitra <span class="muted" style="font-weight:500">· mentoring companion</span></div>
+          <div class="muted" id="chatSub" style="font-size:12.2px"></div>
+        </div>
+        <div class="spacer"></div>
+        <span class="tag pri" id="coreCount">Core 0/15</span>
+      </div>
+      <div class="prog"><i id="progBar"></i></div>
+    </div>
+    <div class="stream" id="stream"></div>
+    <div class="composer" id="composer"></div>
+  </div>
+</section>
+
+<!-- ============ DONE ============ -->
+<section class="screen" id="sc-done">
+  <div class="card happy" style="max-width:780px;margin:22px auto" id="doneCard"></div>
+</section>
+
+<!-- ============ MENTOR DASHBOARD ============ -->
+<section class="screen" id="sc-mentor">
+  <div class="row" style="justify-content:space-between">
+    <div>
+      <h1 style="margin-bottom:2px">Mentor dashboard</h1>
+      <p class="muted" id="mentorSub"></p>
+    </div>
+    <div class="row noprint">
+      <button class="btn pink sm" id="btnSyncCloud">☁️ Google Sheets Sync</button>
+      <button class="btn teal sm" id="btnExportAll">⬇ One Excel file · all students</button>
+      <button class="btn ghost sm" id="btnBackup">Backup</button>
+      <button class="btn ghost sm" id="btnRestore">Restore</button>
+      <button class="btn grey sm" id="btnSettings">Settings</button>
+    </div>
+  </div>
+
+  <div class="stat" style="margin:18px 0">
+    <div class="s s1"><b id="kStuds">0</b><span>Students on roll</span></div>
+    <div class="s s2"><b id="kDone">0</b><span>Completed a session</span></div>
+    <div class="s s3"><b id="kDraft">0</b><span>In progress / not started</span></div>
+    <div class="s s4"><b id="kFlag">0</b><span>Need attention</span></div>
+  </div>
+
+  <div class="toolbar noprint">
+    <input type="text" id="search" placeholder="Search name or register number…">
+    <label class="row" style="margin:0;font-size:13px;font-weight:700">
+      <input type="checkbox" id="onlyFlag" style="width:auto"> only students needing attention
+    </label>
+    <span class="muted" id="listCount"></span>
+  </div>
+
+  <div class="card" style="padding:8px 8px 0">
+    <div style="overflow:auto">
+      <table class="grid">
+        <thead><tr>
+          <th>Sl</th><th>Register No.</th><th>Name</th><th>Status</th><th>Meetings</th><th>Attention</th><th>Key concerns / action</th><th></th>
+        </tr></thead>
+        <tbody id="studRows"></tbody>
+      </table>
+    </div>
+    <div id="emptyState" class="muted" style="padding:26px;text-align:center"></div>
+  </div>
+</section>
+
+<!-- ============ STUDENT RECORD (document) ============ -->
+<section class="screen" id="sc-detail">
+  <div class="row noprint" style="justify-content:space-between;margin-bottom:14px">
+    <button class="btn grey sm" id="backToDash">← All students</button>
+    <div class="row">
+      <button class="btn teal sm" id="btnPrint">🖨 Print / PDF</button>
+      <button class="btn ghost sm" id="btnExportOne">⬇ Excel · this student</button>
+      <button class="btn sm" id="btnAddMeeting">+ Add meeting row</button>
+      <button class="btn pink sm" id="btnSaveDoc">Save changes</button>
+    </div>
+  </div>
+  <div id="detailBody"></div>
+</section>
+
+</div>
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   MentorConnect — single-file mentoring tool
+   Sections: 1 roster  2 storage  3 question flow  4 chat engine
+             5 flags  6 report generator  7 record document
+             8 mentor dashboard  9 Excel export  10 settings/demo
+   ===================================================================== */
+
+/* ------------------------- 1. CLASS ROSTER ------------------------- */
+var ROSTER = [
+ ["NCE24AM001","ABHIJITH N V"],["NCE24AM002","ABHINAV T"],["NCE24AM003","ABHISHEK K M"],
+ ["NCE24AM004","ABHISHEK K U"],["NCE24AM005","ABIJITH S"],["NCE24AM006","ADITH P R"],
+ ["NCE24AM007","ADITHYAN K"],["NCE24AM008","ADNAN SHIRALI"],["NCE24AM009","ADRIJA K"],
+ ["NCE24AM010","AFLAH P"],["NCE24AM011","AFSAL C M"],["NCE24AM012","AKASH A"],
+ ["NCE24AM013","AKHILRAJ S"],["NCE24AM014","AKSHAY KRISHNA K"],["NCE24AM015","ALAMEEN A"],
+ ["NCE24AM016","ANAND ANTONY"],["NCE24AM017","ANEESA MS"],["NCE24AM018","ANKITH"],
+ ["NCE24AM019","ANUJITH N V"],["NCE24AM020","ANUSREE M"],["NCE24AM021","APARNA T"],
+ ["NCE24AM022","AROMAL K S"],["NCE24AM023","ASWAJITH V"],["NCE24AM024","ASWATHI P"],
+ ["NCE24AM025","ASWIN P PRAKASH"],["NCE24AM026","C S SANESH"],["NCE24AM027","DILTIN SAJ"],
+ ["NCE24AM028","FEBIN SAJI EMMANUAL"],["NCE24AM029","GOKUL P S"],["NCE24AM030","GOUTHAM KRISHNA K P"],
+ ["NCE24AM031","JEO MANOJ THOMAS"],["NCE24AM033","KIFA FATHIMA K"],["NCE24AM034","KISHORE V K"],
+ ["NCE24AM035","K J RISHIKESH"],["NCE24AM036","KRISHNA GIREESH"],["NCE24AM037","LINTO THANKACHAN"],
+ ["NCE24AM038","MALAVIKA A"],["NCE24AM039","MD SAQUIB ZAIDI"],["NCE24AM040","MEERA V"],
+ ["NCE24AM041","MEGHNA P S"],["NCE24AM042","M F ADNAN ALI"],["NCE24AM043","MOHAMMED ASLAM"],
+ ["NCE24AM044","MOHAMMED SHADIN K S"],["NCE24AM045","MUHAMMED IRFAN P K"],["NCE24AM046","MUHAMMED RUMAIS C T"],
+ ["NCE24AM047","NAIR ADITYANARAYANAN SUNILKUMAR"],["NCE24AM048","NAVEEN P"],["NCE24AM049","PRANAV A"],
+ ["NCE24AM050","PRATHEEK C"],["NCE24AM051","RUGMINI S"],["NCE24AM052","SHREYASREE S"],
+ ["NCE24AM053","SIDHARTH M"],["NCE24AM054","SOBLE JOSEPH"],["NCE24AM055","SOORAJ K P"],
+ ["NCE24AM056","SREELAKSHMI P M"],["NCE24AM057","SUVIDH SAYUJ"],["NCE24AM058","SWAPNA S"],
+ ["NCE24AM059","UDITH K"],["NCE24AM060","VAISHNAV D NAIR"],["NCE24AM061","VANDHANA C"],
+ ["NCE24AM062","VARADA ELIZABETH KISHORE"],["NCE24AM063","VEENA VINOD"],["NCE24AM064","YADAV KRISHNA P U"],
+ ["NCE24AM065","ARUN K"],["NCE24AM066","JINU S"],["NCE24AM067","KAILAS NATH K"],["NCE24AM068","NANDANA N"]
+];
+var BRANCH = 'AI & ML';
+function normName(s){ return String(s||'').toUpperCase().replace(/\s+/g,' ').trim(); }
+function normReg(s){ return String(s||'').replace(/\s+/g,'').toUpperCase(); }
+function rosterByReg(reg){ for(var i=0;i<ROSTER.length;i++) if(ROSTER[i][0]===normReg(reg)) return ROSTER[i]; return null; }
+function rosterFindByName(input){
+  var q = normName(input); if(!q) return {type:'none'};
+  var exact = [], partial = [];
+  for(var i=0;i<ROSTER.length;i++){
+    if(ROSTER[i][1] === q) exact.push(ROSTER[i]);
+    else if(ROSTER[i][1].indexOf(q) !== -1) partial.push(ROSTER[i]);
+  }
+  if(exact.length === 1) return {type:'one', rec:exact[0]};
+  if(partial.length === 1) return {type:'one', rec:partial[0]};
+  if(partial.length > 1) return {type:'many', list:partial.slice(0,8)};
+  return {type:'none'};
+}
+
+/* ------------------------- 2. STORAGE ------------------------- */
+var MEM = {};
+var HAS_LS = (function(){ try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return true; }catch(e){ return false; } })();
+var store = {
+  get:function(k,d){ try{ var r = HAS_LS ? localStorage.getItem(k) : MEM[k]; return r ? JSON.parse(r) : d; }catch(e){ return d; } },
+  set:function(k,v){ var s = JSON.stringify(v); try{ if(HAS_LS) localStorage.setItem(k,s); else MEM[k]=s; }catch(e){ MEM[k]=s; } }
+};
+var K_STUD='mconnect2.students', K_PASS='mconnect2.pass', K_MENTOR='mconnect2.mentor', K_SESS='mconnect2.session', K_GSYNC='mconnect2.gsync_url';
+
+function allStudents(){ return store.get(K_STUD, []); }
+function saveStudents(l){ store.set(K_STUD, l); }
+function findIdx(list, reg){
+  for(var i=0;i<list.length;i++) if(normReg(list[i].reg) === normReg(reg)) return i;
+  return -1;
+}
+function getStudent(reg){
+  var list = allStudents(); var i = findIdx(list, reg);
+  return i >= 0 ? list[i] : null;
+}
+function putStudent(rec){
+  var list = allStudents(); var i = findIdx(list, rec.reg);
+  if(i >= 0) list[i] = rec; else list.push(rec);
+  saveStudents(list);
+}
+function seedRoster(){
+  var list = allStudents(), changed = false;
+  ROSTER.forEach(function(r){
+    if(findIdx(list, r[0]) === -1){
+      list.push({ name:r[1], reg:r[0], branch:BRANCH, sem:'S5', meetings:[], draft:null, createdAt:new Date().toISOString() });
+      changed = true;
+    }
+  });
+  if(changed) saveStudents(list);
+}
+
+/* ------------------------- helpers ------------------------- */
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function titleCase(n){
+  return String(n||'').toLowerCase().replace(/\b[a-z]/g, function(c){ return c.toUpperCase(); });
+}
+function initials(n){ var p = normName(n).split(' '); return ((p[0]||'?')[0] + (p[1]?p[1][0]:'')).toUpperCase(); }
+function fmtDate(iso){
+  if(!iso) return '';
+  var d = new Date(iso); if(isNaN(d)) return iso;
+  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) + ', ' +
+         d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+function fmtDay(iso){
+  if(!iso) return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){ var p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+  var d = new Date(iso); if(isNaN(d)) return iso;
+  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+function toast(m){
+  var t = document.getElementById('toast'); t.textContent = m; t.classList.add('on');
+  setTimeout(function(){ t.classList.remove('on'); }, 2800);
+}
+function showScreen(id){
+  var a = document.querySelectorAll('.screen');
+  for(var i=0;i<a.length;i++) a[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function mdLite(t){ return String(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>'); }
+function cleanQ(t){ return String(t).replace(/\*\*/g,'').replace(/\s+/g,' ').trim(); }
+
+/* ------------------------- 3. QUESTION FLOW -------------------------
+   core:true  = one of the 15 core questions
+   always:true= asked in every session (family block)
+   ack(step,val) = warm reply the bot gives before the next question
+--------------------------------------------------------------------- */
+function get(a,id){ var x = a[id]; return x ? x.v : undefined; }
+function hasOpt(a,id,opt){ var v = get(a,id); return Array.isArray(v) ? v.indexOf(opt) !== -1 : v === opt; }
+function num(a,id){ var v = get(a,id); return typeof v === 'number' ? v : null; }
+function anyOf(a,id,arr){ for(var i=0;i<arr.length;i++) if(hasOpt(a,id,arr[i])) return true; return false; }
+function isTech(){ return true; } /* this batch is AI & ML */
+
+var SUBJ = ['Mathematics','Data structures & algorithms','Programming & lab','DBMS / SQL','Operating systems',
+  'Computer networks','AI & ML','Web development','Digital electronics','English & communication','Other'];
+
+var STEPS = [
+/* ---------------- FAMILY & HOME ---------------- */
+{ id:'family_work', sec:'Family & home', always:true, type:'text',
+  q:"Hi! I'm Mitra 🙂 I'm here to chat about how things are going for you — with your studies, your skills, your plans, and life in general. There are no right answers, and nothing here is used to judge you.\n\nLet's start easy — what do your parents do?",
+  placeholder:'e.g. Father is a farmer / driver, mother is a homemaker',
+  optional:true, skipLabel:'Skip this one',
+  hint:'Everything you write is seen only by your mentor.' },
+
+{ id:'siblings', sec:'Family & home', always:true, type:'text',
+  q:'Do you have brothers or sisters? What are they up to these days?',
+  placeholder:"e.g. one elder sister doing B.Com, a younger brother in class 9. Type 'none' if you're an only child.",
+  optional:true },
+
+{ id:'family_atmosphere', sec:'Family & home', always:true, type:'choice',
+  q:'How is the atmosphere at home when you sit down to study?',
+  opts:['Really supportive','Supportive, though everyone is busy','It is okay','Stressful at times','Prefer not to say'] },
+
+{ id:'home_support', sec:'Family & home', always:true, type:'scale',
+  q:'Do you feel you get what you need at home for your studies — time, a quiet corner, some encouragement?',
+  funOptions:[
+    {score:1,word:'Needs improvement',emoji:'🌧️',sub:'Hardly any support'},
+    {score:2,word:'Below average',emoji:'⛅',sub:'Only a little support'},
+    {score:3,word:'Satisfactory',emoji:'🌤️',sub:'Manageable / just okay'},
+    {score:4,word:'Good',emoji:'☀️',sub:'Quite supportive'},
+    {score:5,word:'Excellent',emoji:'🌈',sub:'Fully supported'}
+  ],
+  optional:true, when:function(a){ return get(a,'family_atmosphere') !== 'Prefer not to say'; } },
+
+{ id:'family_stress', sec:'Family & home', type:'text', sensitive:true,
+  q:"Thank you for being honest about that — it isn't always easy to say. If you feel like it, tell me a little more about what's going on at home. Completely up to you.",
+  placeholder:'Health, work, money, anything that sits on your mind while you study',
+  optional:true, skipLabel:'Skip — not now',
+  flagText:'Home circumstances affecting studies' },
+
+{ id:'financial', sec:'Family & home', type:'text', sensitive:true,
+  q:'Is there anything about your money or personal situation you would like the college to know, so that we can help you? Fees, hostel, scholarship, health, a part-time job — anything at all.',
+  placeholder:'Write freely — or skip if you would rather not',
+  optional:true, skipLabel:'Prefer not to say',
+  flagText:'Financial / personal support needed' },
+
+/* ---------------- COLLEGE LIFE ---------------- */
+{ id:'feel', sec:'How college is going', core:true, type:'scale',
+  q:'So, how are you feeling about your studies and college life these days?',
+  funOptions:[
+    {score:1,word:'Struggling',emoji:'😣',sub:'Finding it very hard'},
+    {score:2,word:'Needs improvement',emoji:'😕',sub:'Not great right now'},
+    {score:3,word:'Satisfactory',emoji:'🙂',sub:'It is okay / pushing through'},
+    {score:4,word:'Good',emoji:'😊',sub:'Feeling positive'},
+    {score:5,word:'Excellent',emoji:'🚀',sub:'Really thriving'}
+  ] },
+
+{ id:'feel_note', sec:'How college is going', type:'text', sensitive:true,
+  q:'Thanks for telling me honestly. What is weighing on your mind the most right now?',
+  placeholder:'Anything — studies, health, friends, home, money',
+  optional:true, skipLabel:'Skip for now',
+  flagText:'Feeling low about studies / college life' },
+
+{ id:'classroom', sec:'How college is going', core:true, type:'choice',
+  q:'Do you feel at home in your class — with your friends and classmates around you?',
+  opts:['Yes, quite comfortable','Mostly comfortable','Sometimes I feel left out','Not really comfortable'] },
+
+{ id:'classroom_note', sec:'How college is going', type:'text',
+  q:'What would make it easier for you in class?',
+  placeholder:'Friends, seating, language, group work, anything',
+  optional:true },
+
+{ id:'bother', sec:'How college is going', type:'choice', sensitive:true,
+  q:'Is anything sitting on your mind that makes studying harder than it should be?',
+  opts:['No, nothing much','Yes, a little','Yes, quite a lot','Prefer not to say'] },
+
+{ id:'bother_note', sec:'How college is going', type:'text', sensitive:true,
+  q:"Would you like to tell me what it is? We'll try to sort it out together — and it stays with your mentor.",
+  optional:true, skipLabel:'Skip',
+  flagText:'Something is bothering the student — needs a one-to-one talk' },
+
+{ id:'adjust', sec:'How college is going', type:'choice',
+  q:'How has the jump to college life been — settled in, or still adjusting?',
+  opts:['Settled in well','A little adjusting','A lot of adjusting'] },
+
+{ id:'adjust_areas', sec:'How college is going', type:'multi',
+  q:'Which parts are still taking getting used to?',
+  opts:['Hostel & food','Being away from home','Language','Travelling / commute','Timetable & workload','Making friends','Money','Health & sleep'],
+  when:function(a){ return anyOf(a,'adjust',['A little adjusting','A lot of adjusting']); } },
+
+{ id:'teachers', sec:'How college is going', type:'choice',
+  q:'If you had a doubt or a problem, would you feel okay walking up to a teacher?',
+  opts:['Yes, always','Sometimes','Not really','I avoid it'] },
+
+{ id:'teachers_why', sec:'How college is going', type:'multi',
+  q:'What holds you back?',
+  opts:['Shyness','Fear of being judged','Teachers seem very busy','English / language','Not sure whom to ask','A bad experience before','Nothing, I am fine'],
+  when:function(a){ return anyOf(a,'teachers',['Sometimes','Not really','I avoid it']); } },
+
+/* ---------------- ACADEMICS ---------------- */
+{ id:'hard_subjects', sec:'Subjects & studies', core:true, type:'multi',
+  q:'Let\'s talk subjects 📚 Which ones are giving you a tough time this semester?',
+  opts:SUBJ, allowOther:true },
+
+{ id:'hard_reason', sec:'Subjects & studies', type:'multi',
+  q:'What do you think makes those subjects feel hard?',
+  opts:['Basics are not clear','Not enough practice','Class moves too fast','I missed classes','I lose interest','Language barrier','No good notes','Weak in maths','I study only before exams'],
+  allowOther:true,
+  when:function(a){ var v = get(a,'hard_subjects'); return v && v.length && !(v.length===1 && /^(none|nothing)/i.test(v[0])); } },
+
+{ id:'enjoy', sec:'Subjects & studies', type:'text',
+  q:'Now the nicer part — which subjects do you actually enjoy, and why?',
+  placeholder:'e.g. DBMS — I like designing tables; or AI — it feels like magic' },
+
+{ id:'prep_exams', sec:'Subjects & studies', core:true, type:'multi',
+  q:'When series exams come around, how do you usually go about it?',
+  opts:['I revise regularly anyway','Mostly in the last 2–3 days','Group study with friends','From my own notes','Only from the textbook','YouTube / online videos','Previous question papers','Honestly, I do not prepare much'] },
+
+{ id:'understand', sec:'Subjects & studies', type:'choice',
+  q:'When a new topic is taught in class, how often does it click for you?',
+  opts:['Almost always','Quite often','Once in a while','Rarely'] },
+
+{ id:'understand_help', sec:'Subjects & studies', type:'yesno',
+  q:'Would extra classes, a doubt-clearing session or study material help you?',
+  when:function(a){ return anyOf(a,'understand',['Once in a while','Rarely','Quite often']); },
+  flagText:'Wants extra academic help' },
+
+{ id:'revise', sec:'Subjects & studies', type:'choice',
+  q:'Do you get back to topics regularly, or mostly during exam time?',
+  opts:['Regularly every week','Now and then','Only before exams','Almost never'] },
+
+{ id:'study_time', sec:'Subjects & studies', core:true, type:'choice',
+  q:'On a normal day, how much time do you get for your own studying?',
+  opts:['Less than an hour','1–2 hours','2–3 hours','3–4 hours','More than 4 hours'] },
+
+{ id:'assignments', sec:'Subjects & studies', type:'choice',
+  q:'How are you doing with assignments, lab work and records?',
+  opts:['All done on time','Mostly on time','Sometimes late','Usually pending'] },
+
+{ id:'assignments_why', sec:'Subjects & studies', type:'multi',
+  q:'What usually gets in the way?',
+  opts:['I do not understand the topic','I keep postponing','Too many other activities','Health','Work at home','Job or long travel','Not enough time'],
+  when:function(a){ return anyOf(a,'assignments',['Sometimes late','Usually pending']); } },
+
+{ id:'academic_support', sec:'Subjects & studies', type:'yesno',
+  q:'Is there a subject where you would like some extra help right now?',
+  flagText:'Additional academic support requested' },
+
+{ id:'academic_support_what', sec:'Subjects & studies', type:'text',
+  q:'Which subject, and what would help most — classes, notes, practice sums, or a senior to explain?',
+  placeholder:'e.g. Maths II — half an hour of doubts after class',
+  when:function(a){ return get(a,'academic_support') === 'Yes'; } },
+
+{ id:'target', sec:'Subjects & studies', type:'text',
+  q:'What would you like to achieve by the end of this semester?',
+  placeholder:'e.g. CGPA above 8.5, all subjects cleared, 85% attendance',
+  chips:['CGPA 8.5+','CGPA 8+','Clear all subjects','No back papers','90% attendance','Finish a project','Top 10 in class'] },
+
+/* ---------------- ATTENDANCE ---------------- */
+{ id:'attendance_pct', sec:'Attendance & routine', core:true, type:'choice',
+  q:'Roughly where does your attendance stand this semester?',
+  opts:['Below 50%','50–65%','65–75%','75–85%','Above 85%'] },
+
+{ id:'absence_reasons', sec:'Attendance & routine', type:'multi',
+  q:'No judgement at all — what is usually behind the days you miss?',
+  opts:['Nothing in particular','Transport / college bus','Health','Things at home','Job or work','Some classes feel pointless','Oversleeping','Fests or sports','Fees or paperwork'],
+  allowOther:true,
+  when:function(a){ return get(a,'attendance_pct') !== 'Above 85%'; } },
+
+{ id:'attendance_concerns', sec:'Attendance & routine', core:true, type:'choice',
+  q:'Does your attendance figure worry you at all?',
+  opts:['Not really','A little','Yes — I may fall short of 75%','Prefer not to say'] },
+
+{ id:'attendance_help', sec:'Attendance & routine', type:'yesno',
+  q:'Your attendance looks like it may be under the 75% mark. Want to work on it together — a simple weekly plan, and medical documents or condonation support if you need them?',
+  flagText:'Attendance below 75% — intervention needed',
+  when:function(a){
+    return anyOf(a,'attendance_pct',['Below 50%','50–65%','65–75%']) || hasOpt(a,'attendance_concerns','Yes — I may fall short of 75%');
+  } },
+
+{ id:'improve_regularity', sec:'Attendance & routine', type:'text',
+  q:'If you had to change one thing to be more regular, what would it be?',
+  placeholder:'e.g. sleep by 11, take the 8 o\u2019clock bus, sit in front',
+  chips:['Fixed sleep schedule','Reach early','Morning study','Avoid bunking','Health check-up'] },
+
+/* ---------------- LEARNING HABITS ---------------- */
+{ id:'study_place', sec:'How you learn', type:'multi',
+  q:'Where do you usually sit down to study?',
+  opts:['Home','Hostel room','Library','Reading room','A friend\u2019s place','After college hours','Mostly on my phone'] },
+
+{ id:'study_method', sec:'How you learn', type:'text',
+  q:'What way of studying works best for you?',
+  placeholder:'e.g. writing summaries, solving problems, teaching a friend, watching videos' },
+
+{ id:'notes', sec:'How you learn', type:'choice',
+  q:'Do you write notes in class?',
+  opts:['Yes, regularly','Sometimes','Rarely','Never'] },
+
+{ id:'online_resources', sec:'How you learn', type:'multi',
+  q:'Do you learn from outside college too — videos, courses, sites?',
+  opts:['YouTube','NPTEL / SWAYAM','Coursera / Udemy','GeeksforGeeks / W3Schools','ChatGPT & AI tools','College LMS / notes','Study groups online','Not yet, I haven\u2019t explored'] },
+
+{ id:'time_manage', sec:'How you learn', type:'text',
+  q:'How do you juggle class, assignments, rest and everything else through the day?',
+  placeholder:'Just tell me what a normal day really looks like' },
+
+{ id:'distractions', sec:'How you learn', core:true, type:'multi',
+  q:'Be honest with me — what usually pulls you away from studying?',
+  opts:['Phone / social media','Reels, games or OTT','Friends & chatting','Noise at home or hostel','Work at home','Sleep and tiredness','Sports or club activities','Nothing much, I stay focused'],
+  allowOther:true },
+
+{ id:'study_plan', sec:'How you learn', type:'yesno',
+  q:'Do you have any kind of daily or weekly study plan?' },
+
+{ id:'plan_help', sec:'How you learn', type:'yesno',
+  q:'Would a simple weekly plan — built around your actual timings — help you?',
+  flagText:'Needs a study plan / time-management help',
+  when:function(a){ return get(a,'study_plan') === 'No' || hasOpt(a,'distractions','Phone / social media') || hasOpt(a,'distractions','Reels, games or OTT'); } },
+
+/* ---------------- TECHNICAL SKILLS ---------------- */
+{ id:'prog_comfort', sec:'Technical skills', core:true, type:'scale',
+  q:'Now the fun part 💻 How comfortable are you with programming — writing code, fixing errors, building something on your own?',
+  funOptions:[
+    {score:1,word:'Beginner / Needs improvement',emoji:'🌱',sub:'Just starting / finding it tough'},
+    {score:2,word:'Below average',emoji:'🐣',sub:'Can follow code, hard to write'},
+    {score:3,word:'Satisfactory',emoji:'💻',sub:'Can write basic programs'},
+    {score:4,word:'Good',emoji:'⚡',sub:'Can build small projects & debug'},
+    {score:5,word:'Excellent',emoji:'🔥',sub:'Very confident & independent'}
+  ] },
+
+{ id:'languages', sec:'Technical skills', type:'multi',
+  q:'Which languages or tools have you worked with so far?',
+  opts:['C','C++','Python','Java','JavaScript','SQL','R','Kotlin / Swift','HTML & CSS','MATLAB','Git / GitHub','Nothing yet'] },
+
+{ id:'prog_rating', sec:'Technical skills', type:'choice',
+  q:'How would you describe your programming level today?',
+  opts:['Still learning the basics','I can write small programs','I can build a working project','I can build and debug on my own'] },
+
+{ id:'projects', sec:'Technical skills', type:'text',
+  q:'Have you built anything yourself — a project, a mini app, a website? Tell me about it (or say none, that is perfectly fine too).',
+  placeholder:'e.g. a quiz game in Python, a college website, a small ML model' },
+
+{ id:'interest_areas', sec:'Technical skills', type:'multi',
+  q:'Which of these excite you the most?',
+  opts:['AI / Machine learning','Data science & analytics','Cybersecurity','Cloud computing','Networking','Web development','Mobile apps','IoT / embedded','Robotics','Not sure yet'] },
+
+{ id:'events', sec:'Technical skills', type:'multi',
+  q:'Have you tried hackathons, workshops, internships or tech fests?',
+  opts:['Hackathons','Workshops','Internships','Coding contests','Project presentations','Technical clubs','Online certifications','Not yet'],
+  allowOther:true },
+
+{ id:'portfolio', sec:'Technical skills', type:'choice',
+  q:'Do you have a GitHub account or a portfolio you keep updated?',
+  opts:['Yes, and I keep it updated','Yes, but it is not active','No','I do not know what GitHub is'] },
+
+{ id:'portfolio_help', sec:'Technical skills', type:'yesno',
+  q:'Shall we set up a GitHub profile / mini portfolio together this semester?',
+  flagText:'No GitHub / portfolio — offer a session',
+  when:function(a){ return anyOf(a,'portfolio',['No','I do not know what GitHub is','Yes, but it is not active']); } },
+
+{ id:'skill_next', sec:'Technical skills', core:true, type:'text',
+  q:'If you could learn one technical skill in the next 6 months, what would it be?',
+  placeholder:'e.g. Python for data analysis, web development, DSA in Java',
+  chips:['Python','DSA / problem solving','Web development','AI & ML basics','SQL / DBMS','Cloud (AWS/Azure)','Cybersecurity basics','IoT / Arduino','Git & GitHub','Aptitude & reasoning'] },
+
+/* ---------------- CAREER ---------------- */
+{ id:'after_grad', sec:'Career & future', core:true, type:'choice',
+  q:'Where do you see yourself after your degree?',
+  opts:['A job through campus placement','Higher studies (M.Tech / MS)','MBA','Competitive exams (GATE / CAT / UPSC / Bank)','My own startup','Government job','Not decided yet'] },
+
+{ id:'career_role', sec:'Career & future', type:'text',
+  q:'Is there a particular role or company you are aiming at?',
+  placeholder:'e.g. data analyst, ML engineer, PSU engineer, professor',
+  optional:true },
+
+{ id:'higher_studies', sec:'Career & future', type:'text',
+  q:'Which course and entrance exam are you planning, and how far along is the preparation?',
+  placeholder:'e.g. M.Tech in AI — GATE next year, started two hours a day',
+  when:function(a){ return anyOf(a,'after_grad',['Higher studies (M.Tech / MS)','MBA']); } },
+
+{ id:'phd_interest', sec:'Career & future', type:'choice',
+  q:'Does research or a PhD interest you at some stage?',
+  opts:['Yes, definitely','Maybe later','No','Not sure'],
+  when:function(a){ return hasOpt(a,'after_grad','Higher studies (M.Tech / MS)'); } },
+
+{ id:'competitive_exam', sec:'Career & future', type:'text',
+  q:'Which exam are you preparing for, and how is it going so far?',
+  placeholder:'e.g. GATE CSE — weekly mock tests, maths is weak',
+  when:function(a){ return anyOf(a,'after_grad',['Competitive exams (GATE / CAT / UPSC / Bank)','Government job']); } },
+
+{ id:'entrepreneur', sec:'Career & future', type:'text',
+  q:'Tell me about your idea — where is it right now?',
+  placeholder:'e.g. an app idea, tried selling something online once',
+  when:function(a){ return hasOpt(a,'after_grad','My own startup'); } },
+
+{ id:'skills_needed', sec:'Career & future', type:'text',
+  q:'What skills do you think that role or goal needs from you?',
+  placeholder:'e.g. DSA, communication, Excel, cloud basics' },
+
+{ id:'prep_now', sec:'Career & future', type:'multi',
+  q:'What are you doing right now to move towards it?',
+  opts:['Online courses','Coding practice','Aptitude practice','Building projects','Reading on my own','Workshops & events','Nothing yet','Waiting for college training'] },
+
+{ id:'career_concerns', sec:'Career & future', type:'text',
+  q:'Anything worrying you about your career?',
+  placeholder:'e.g. scared of interviews, unsure which domain suits me',
+  optional:true },
+
+/* ---------------- PLACEMENT ---------------- */
+{ id:'placement_started', sec:'Placement preparation', core:true, type:'choice',
+  q:'Where are you with placement preparation?',
+  opts:['Going at it seriously','Just started','Only thinking about it','Not started yet'] },
+
+{ id:'placement_grid', sec:'Placement preparation', type:'grid',
+  q:'Rate yourself honestly — 1 means "not yet", 5 means "confident":',
+  items:['Aptitude & reasoning','Coding / interview questions','Communication & English'],
+  when:function(a){ return get(a,'placement_started') !== 'Not started yet'; } },
+
+{ id:'resume', sec:'Placement preparation', type:'choice',
+  q:'Do you have a resume ready?',
+  opts:['Yes, up to date','Yes, but it needs work','No, not yet'] },
+
+{ id:'resume_help', sec:'Placement preparation', type:'yesno',
+  q:'Shall we build or polish your resume together next time we meet?',
+  flagText:'Needs resume preparation',
+  when:function(a){ return anyOf(a,'resume',['No, not yet','Yes, but it needs work']); } },
+
+{ id:'mock_interviews', sec:'Placement preparation', type:'choice',
+  q:'Have you been through any mock interviews?',
+  opts:['Yes, a few','Only one','No, never'] },
+
+{ id:'mock_help', sec:'Placement preparation', type:'yesno',
+  q:'Would you like to do a practice interview with me or with a senior?',
+  flagText:'No mock interview practice yet',
+  when:function(a){ return anyOf(a,'mock_interviews',['No, never','Only one']); } },
+
+{ id:'placement_help', sec:'Placement preparation', type:'multi',
+  q:'Which parts of placement prep would you like help with?',
+  opts:['Aptitude training','Coding & DSA practice','Resume building','Mock interviews','Spoken English','Company-specific prep','Core subject revision','Group discussions','Nothing right now'],
+  allowOther:true },
+
+/* ---------------- COMMUNICATION ---------------- */
+{ id:'english_comfort', sec:'Communication & confidence', core:true, type:'scale',
+  q:'How comfortable are you speaking in English?',
+  funOptions:[
+    {score:1,word:'Needs improvement',emoji:'🤐',sub:'Hesitant / very uncomfortable'},
+    {score:2,word:'Below average',emoji:'💬',sub:'A bit awkward / nervous'},
+    {score:3,word:'Satisfactory',emoji:'🗣️',sub:'Manageable / can convey ideas'},
+    {score:4,word:'Good',emoji:'✨',sub:'Comfortable in conversation'},
+    {score:5,word:'Excellent',emoji:'🎤',sub:'Very fluent & confident'}
+  ] },
+
+{ id:'soft_grid', sec:'Communication & confidence', type:'grid',
+  q:'And how do you feel about these? (1 = very uncomfortable, 5 = very comfortable)',
+  items:['Giving presentations','Asking questions in class','Speaking in group discussions'] },
+
+{ id:'soft_skill', sec:'Communication & confidence', type:'multi',
+  q:'Which one would you most like to grow?',
+  opts:['Public speaking','English fluency','Confidence','Teamwork','Time management','Leadership','Body language','Listening','Writing','Nothing specific'] },
+
+/* ---------------- PERSONAL ---------------- */
+{ id:'strength', sec:'You, personally', core:true, type:'text',
+  q:'Let\'s talk about you for a bit 🌟 What is your biggest strength?',
+  placeholder:'e.g. I never give up, I explain things well, I am very organised' },
+
+{ id:'improve_area', sec:'You, personally', type:'text',
+  q:'And what is one thing about yourself you would like to improve?',
+  placeholder:'e.g. confidence, consistency, phone habit',
+  optional:true },
+
+{ id:'motivation', sec:'You, personally', type:'text',
+  q:'What keeps you going?',
+  placeholder:'e.g. my parents, a good job, my friends, proving something to myself',
+  optional:true },
+
+{ id:'demotivators', sec:'You, personally', type:'multi',
+  q:'And what tends to pull you down?',
+  opts:['Low marks','Comparing myself with others','Family pressure','Fear of failing','Boredom','Poor sleep or health','Money worries','Feeling unsupported','Nothing much'] },
+
+{ id:'stress_scale', sec:'You, personally', type:'scale',
+  q:'How do you cope when exams go badly or stress builds up?',
+  funOptions:[
+    {score:1,word:'Needs support',emoji:'🌧️',sub:'Overwhelmed / very badly'},
+    {score:2,word:'Below average',emoji:'🌪️',sub:'Struggles to bounce back'},
+    {score:3,word:'Satisfactory',emoji:'⛅',sub:'Manages somehow'},
+    {score:4,word:'Good',emoji:'☀️',sub:'Handles it fairly well'},
+    {score:5,word:'Excellent',emoji:'🛡️',sub:'Very resilient & calm'}
+  ] },
+
+{ id:'stress_ways', sec:'You, personally', type:'multi',
+  q:'What do you usually do when you are stressed?',
+  opts:['Talk to friends or family','Make a plan and work harder','Exercise or play','Music / movies','Sleep it off','Prayer / meditation','Keep it to myself','Get anxious','Blame myself','Talk to a teacher'] },
+
+{ id:'stress_support', sec:'You, personally', type:'yesno', sensitive:true,
+  q:"Thank you for telling me — that takes courage. Would you like to talk to me, or meet the college counsellor? It is completely confidential, and it genuinely helps.",
+  optional:true, skipLabel:'Not right now',
+  flagText:'Possible stress — counselling support offered',
+  when:function(a){
+    var n = num(a,'stress_scale');
+    return (n !== null && n <= 2) || hasOpt(a,'stress_ways','Keep it to myself') ||
+           hasOpt(a,'stress_ways','Get anxious') || hasOpt(a,'stress_ways','Blame myself');
+  } },
+
+{ id:'time_balance', sec:'You, personally', type:'text',
+  q:'How do you balance studies with everything else — sports, clubs, home, work?',
+  placeholder:'Tell me what a normal weekday looks like',
+  optional:true },
+
+{ id:'habit_change', sec:'You, personally', type:'text',
+  q:'Is there a habit you would like to change?',
+  placeholder:'e.g. late-night phone use, skipping breakfast, last-minute studying',
+  optional:true },
+
+/* ---------------- MENTOR RELATIONSHIP ---------------- */
+{ id:'mentor_support', sec:'You & your mentor', core:true, type:'multi',
+  q:'Now that we have talked — what would you like from me as your mentor?',
+  opts:['Academic guidance','Help in a specific subject','Career & placement advice','Someone to talk to','Help with study planning','Help with scholarships or fees','Introduction to seniors & alumni','Regular check-ins'],
+  allowOther:true },
+
+{ id:'meet_frequency', sec:'You & your mentor', type:'choice',
+  q:'How often would you like us to catch up?',
+  opts:['Every week','Once in two weeks','Once a month','Only when I need help'] },
+
+{ id:'diff_to_discuss', sec:'You & your mentor', type:'text', sensitive:true,
+  q:'Is there anything you find hard to bring up with teachers?',
+  placeholder:'Optional — but this is exactly what a mentor is for',
+  optional:true, skipLabel:'Skip' },
+
+{ id:'college_issue', sec:'You & your mentor', type:'text',
+  q:'Anything in college you feel should be looked at?',
+  placeholder:'e.g. lab timings, bus routes, hostel food, wifi, library hours',
+  optional:true, skipLabel:'Nothing to report' },
+
+{ id:'help_me', sec:'You & your mentor', type:'text',
+  q:'And anything you would like me to help you with personally?',
+  placeholder:'Write anything — it stays between us',
+  optional:true, skipLabel:'Nothing right now' },
+
+/* ---------------- ACTION PLAN ---------------- */
+{ id:'plan_problem', sec:'Our action plan', plan:true, type:'text',
+  q:'Let\'s finish with a small plan you can actually keep 🙂\n\nWhat is one academic problem you want to solve?',
+  placeholder:'e.g. Maths II — I have not opened the textbook in three weeks' },
+
+{ id:'plan_skill', sec:'Our action plan', plan:true, type:'text',
+  q:'And one skill you want to develop?',
+  placeholder:'e.g. two DSA problems every day' },
+
+{ id:'plan_action', sec:'Our action plan', plan:true, type:'text',
+  q:'What is one thing you will do before our next meeting?',
+  placeholder:'e.g. finish units 1–2 of DBMS and clear my pending record' },
+
+{ id:'plan_support', sec:'Our action plan', plan:true, type:'text',
+  q:'What support would you like from me for this?',
+  placeholder:'e.g. a 15-minute doubt session each week, or a senior to guide me' },
+
+{ id:'plan_when', sec:'Our action plan', plan:true, type:'date',
+  q:'By when will you complete it? (Pick a date — I will check in with you.)',
+  optional:true }
+];
+
+/* warm acknowledgement before the next question */
+var ACK_STEP = {
+  family_work:"Lovely, thank you for that. 🙏",
+  siblings:"Good to know — family makes a real difference.",
+  family_atmosphere:"Thanks for saying that honestly.",
+  home_support:"Thank you — that helps me understand your situation.",
+  family_stress:"Thank you for trusting me with that. I've noted it for your mentor.",
+  financial:"Thank you for telling me. Your mentor will look into what support is possible — you won't be left alone with this.",
+  feel:"Thanks for being open about it.",
+  feel_note:"I'm glad you shared that. It matters.",
+  classroom:"Noted — that's good to know.",
+  bother:"Okay. Thank you for being straight with me.",
+  bother_note:"Thank you. We'll work on this together.",
+  adjust:"Thanks — the first year or two can be quite a shift.",
+  teachers:"Understood. Many students feel exactly the same.",
+  hard_subjects:"That's a useful list — very common ones, actually.",
+  hard_reason:"That helps me see where the real problem is.",
+  enjoy:"Nice! Interests like that are a great base to build on. 😊",
+  prep_exams:"Okay, got it.",
+  understand:"That's helpful to know.",
+  academic_support:"Noted — I'll flag that for extra help.",
+  target:"That's a good target to hold on to. 🎯",
+  attendance_pct:"Thank you for being honest — attendance is fixable, so don't worry.",
+  absence_reasons:"Thanks for telling me plainly. No judgement here at all.",
+  attendance_concerns:"Understood. Let's make sure this doesn't become a problem.",
+  attendance_help:"Good. We'll sort out a plan together — you're not alone in this.",
+  improve_regularity:"That's a practical thought. Let's build on it.",
+  study_place:"Got it.",
+  study_method:"That's a solid method.",
+  notes:"Noted.",
+  online_resources:"Good — self-learning counts for a lot.",
+  distractions:"Thanks for being honest — that's the first step to beating it. 💪",
+  study_plan:"Okay.",
+  plan_help:"Great, we'll make one that fits your real routine.",
+  prog_comfort:"Thanks for the honest answer — everyone starts somewhere.",
+  languages:"Good, that's a decent base.",
+  prog_rating:"Noted — that gives me a clear picture.",
+  projects:"Thanks for sharing that.",
+  interest_areas:"Nice choices! 🌟",
+  events:"Good to know your exposure so far.",
+  portfolio:"Okay — easy fix, we'll set one up.",
+  skill_next:"Excellent choice to aim at. 🚀",
+  after_grad:"That's a clear direction to work towards.",
+  career_role:"Noted — a specific goal helps a lot.",
+  skills_needed:"Good thinking.",
+  prep_now:"Thanks — that tells me where you are.",
+  career_concerns:"It's normal to feel that, and it's fixable.",
+  placement_started:"Okay, thanks for being honest.",
+  resume:"Noted.",
+  mock_interviews:"Fine — mock interviews are easy to arrange.",
+  placement_help:"Great, I'll line those up.",
+  english_comfort:"Thanks — many students feel like this, and it improves fast with practice.",
+  soft_grid:"Thanks, that's a useful picture.",
+  soft_skill:"Good choice to focus on.",
+  strength:"That's a real strength — remember it on the hard days. 🌟",
+  improve_area:"Thanks for being honest about that.",
+  motivation:"That's a lovely source of motivation.",
+  demotivators:"Thanks for trusting me with that.",
+  stress_scale:"Thank you for being honest — this is important for me to know.",
+  stress_ways:"That's more common than you'd think.",
+  stress_support:"Thank you. Sometimes just talking to someone changes a lot.",
+  time_balance:"Thanks — that's a realistic picture of your day.",
+  habit_change:"Good self-awareness. Small changes stick best.",
+  mentor_support:"Thank you — that's exactly what I needed to know.",
+  meet_frequency:"Perfect, I'll plan around that.",
+  diff_to_discuss:"Thank you for trusting me with that.",
+  college_issue:"Thank you — I'll take it up.",
+  help_me:"Of course. That's what I'm here for.",
+  plan_problem:"Good — naming the problem is half the work.",
+  plan_skill:"That's a strong choice.",
+  plan_action:"That's a clear, doable first step. 👏",
+  plan_support:"Noted — I'll hold myself to that.",
+  plan_when:"Perfect. That date is in my diary."
+};
+var ACK_TEXT = ["Thanks for sharing that.","Got it, thank you.","Noted — that helps.","That's useful to know.",
+  "Thank you for being open.","Right, I've noted that.","Okay, understood.","Thanks for telling me."];
+var ACK_POS = ["That's lovely to hear! 😊","Great to know! 🌟","Wonderful — keep it up!","That's really good news. 🙌"];
+var ACK_MID = ["Okay, thanks.","Got it.","Noted.","Fair enough."];
+var ACK_NEG = ["Thanks for being honest — that's genuinely useful.","I'm glad you told me. That's exactly what we should work on.","Thank you for saying that. Let's improve it together.","That's okay — plenty of students start here."];
+var ackTick = 0;
+function pickRot(arr){ ackTick++; return arr[ackTick % arr.length]; }
+
+function ackFor(step, val, first){
+  var name = first ? first : '';
+  var base = ACK_STEP[step.id];
+  if(step.type === 'scale'){
+    var n = Number(val);
+    base = base || (n <= 2 ? pickRot(ACK_NEG) : n === 3 ? pickRot(ACK_MID) : pickRot(ACK_POS));
+  } else if(step.type === 'yesno'){
+    base = base || (val === 'Yes' ? 'Noted 👍' : 'Okay, no problem.');
+  } else if(step.type === 'text'){
+    base = base || pickRot(ACK_TEXT);
+  } else if(step.type === 'multi'){
+    base = base || 'Got it — ' + (val && val.length ? val.slice(0,3).join(', ') + (val.length>3 ? ' and more' : '') : 'noted') + '.';
+  } else if(step.type === 'grid'){
+    base = base || 'Thanks — that gives me a good picture.';
+  } else {
+    base = base || pickRot(ACK_TEXT);
+  }
+  if(name && Math.random() < 0.35) base = base + ' ' + name;
+  return base;
+}
+
+/* ------------------------- flow engine ------------------------- */
+var CORE_TOTAL = STEPS.filter(function(s){ return s.core; }).length;
+function stepById(id){ for(var i=0;i<STEPS.length;i++) if(STEPS[i].id===id) return STEPS[i]; return null; }
+function nextStep(answers, mode){
+  for(var i=0;i<STEPS.length;i++){
+    var s = STEPS[i];
+    if(answers[s.id]) continue;
+    if(mode === 'quick' && !(s.core || s.plan || s.always)) continue;
+    if(s.when){ var ok=false; try{ ok = !!s.when(answers, mode); }catch(e){ ok=false; } if(!ok) continue; }
+    return s;
+  }
+  return null;
+}
+function coreAnswered(a){ var n=0; STEPS.forEach(function(s){ if(s.core && a[s.id]) n++; }); return Math.min(n, CORE_TOTAL); }
+function askedCount(a){ return Object.keys(a).length; }
+
+function qualWord(n, context){
+  var numVal = typeof n === 'object' && n !== null ? n.score : Number(n);
+  if(!numVal || isNaN(numVal)) return 'Not assessed';
+  if(context === 'programming'){
+    if(numVal <= 1) return 'Needs improvement (beginner)';
+    if(numVal === 2) return 'Below average (learning basics)';
+    if(numVal === 3) return 'Satisfactory (can write small programs)';
+    if(numVal === 4) return 'Good (can build working projects)';
+    return 'Excellent (very confident developer)';
+  }
+  if(context === 'english'){
+    if(numVal <= 1) return 'Needs improvement (hesitant)';
+    if(numVal === 2) return 'Below average';
+    if(numVal === 3) return 'Satisfactory';
+    if(numVal === 4) return 'Good';
+    return 'Excellent (fluent)';
+  }
+  if(context === 'stress'){
+    if(numVal <= 1) return 'Needs support (copes poorly)';
+    if(numVal === 2) return 'Below average';
+    if(numVal === 3) return 'Satisfactory (copes somehow)';
+    if(numVal === 4) return 'Good (resilient)';
+    return 'Excellent (handles pressure well)';
+  }
+  if(context === 'home'){
+    if(numVal <= 1) return 'Needs improvement (hardly any support)';
+    if(numVal === 2) return 'Below average';
+    if(numVal === 3) return 'Satisfactory (adequate)';
+    if(numVal === 4) return 'Good';
+    return 'Excellent (fully supportive)';
+  }
+  if(numVal <= 1) return 'Needs improvement';
+  if(numVal === 2) return 'Below average';
+  if(numVal === 3) return 'Satisfactory';
+  if(numVal === 4) return 'Good';
+  return 'Excellent';
+}
+function displayOf(step, val){
+  if(val === undefined || val === null) return '';
+  if(Array.isArray(val)) return val.join(', ');
+  if(step && step.type === 'scale'){
+    if(typeof val === 'object' && val !== null && val.word){
+      return (val.emoji ? val.emoji + ' ' : '') + val.word;
+    }
+    return qualWord(val);
+  }
+  if(typeof val === 'object'){
+    var p=[];
+    for(var k in val){
+      if(Object.prototype.hasOwnProperty.call(val,k)){
+        p.push(k + ': ' + qualWord(val[k]));
+      }
+    }
+    return p.join(' · ');
+  }
+  if(step && step.type === 'date') return fmtDay(val);
+  return String(val);
+}
+
+/* ------------------------- 5. FLAGS ------------------------- */
+function computeFlags(a){
+  var f = [];
+  function add(level,text){ f.push({level:level,text:text}); }
+  var n;
+  var att = get(a,'attendance_pct');
+  if(att === 'Below 50%') add('high','Attendance below 50% — risk of detention');
+  else if(att === '50–65%') add('high','Attendance 50–65% — well short of 75%');
+  else if(att === '65–75%') add('med','Attendance 65–75% — borderline, monitor weekly');
+  if(get(a,'attendance_help') === 'Yes') add('high','Asked for help with attendance');
+  if(hasOpt(a,'attendance_concerns','Yes — I may fall short of 75%')) add('med','Worried about the 75% attendance rule');
+  if((n = num(a,'feel')) !== null && n <= 2) add('high','Feeling low about studies / college life');
+  if((n = num(a,'stress_scale')) !== null && n <= 2) add('high','Coping poorly with stress — suggest counselling');
+  if(hasOpt(a,'stress_ways','Keep it to myself')) add('med','Withdraws and keeps stress to himself/herself');
+  if(get(a,'stress_support') === 'Yes') add('high','Open to counselling / mentor support');
+  if(hasOpt(a,'bother','Yes, quite a lot')) add('high','Something is seriously bothering the student');
+  else if(hasOpt(a,'bother','Yes, a little')) add('med','Something is bothering the student');
+  if((n = num(a,'home_support')) !== null && n <= 2) add('med','Low support at home for studies');
+  if(get(a,'family_atmosphere') === 'Stressful at times') add('med','Stressful atmosphere at home');
+  if(get(a,'family_stress')) add('high','Family circumstances affecting studies — handle sensitively');
+  if(get(a,'financial')) add('high','Financial / personal difficulty shared — check welfare schemes');
+  if(anyOf(a,'classroom',['Not really comfortable','Sometimes I feel left out'])) add('med','Not fully at ease with classmates');
+  if(anyOf(a,'teachers',['Not really','I avoid it'])) add('low','Hesitant to approach teachers');
+  if(hasOpt(a,'adjust','A lot of adjusting')) add('med','Finding it hard to adjust to college life');
+  if(get(a,'academic_support') === 'Yes') add('med','Needs additional academic support');
+  if(get(a,'understand_help') === 'Yes') add('med','Wants extra classes / doubt sessions');
+  if(hasOpt(a,'understand','Rarely')) add('high','Topics in class rarely click');
+  if(hasOpt(a,'assignments','Usually pending')) add('med','Assignments / lab records usually pending');
+  if(get(a,'plan_help') === 'Yes') add('low','Wants help building a study plan');
+  if(get(a,'study_time') === 'Less than an hour') add('med','Studies less than an hour a day');
+  if(anyOf(a,'hard_subjects',['Mathematics','Programming & lab','Data structures & algorithms'])) add('low','Struggling with a foundation subject');
+  if(anyOf(a,'distractions',['Phone / social media','Reels, games or OTT'])) add('low','Phone / social media distraction');
+  if((n = num(a,'prog_comfort')) !== null && n <= 2) add('med','Low programming confidence — needs hand-holding');
+  if(hasOpt(a,'languages','Nothing yet')) add('med','No programming language yet');
+  if(hasOpt(a,'events','Not yet')) add('low','No hackathon / workshop exposure yet');
+  if(anyOf(a,'portfolio',['No','I do not know what GitHub is'])) add('med','No GitHub / portfolio');
+  if(get(a,'portfolio_help') === 'Yes') add('low','Wants a portfolio session');
+  if(get(a,'placement_started') === 'Not started yet') add('med','Placement preparation not started');
+  if(get(a,'placement_started') === 'Only thinking about it') add('low','Placement prep still only a thought');
+  if(hasOpt(a,'resume','No, not yet')) add('med','No resume yet');
+  else if(hasOpt(a,'resume','Yes, but it needs work')) add('low','Resume needs improvement');
+  if(get(a,'resume_help') === 'Yes') add('med','Asked for help with the resume');
+  if(hasOpt(a,'mock_interviews','No, never')) add('low','No mock interview yet');
+  if(get(a,'after_grad') === 'Not decided yet') add('low','Career direction not decided');
+  if((n = num(a,'english_comfort')) !== null && n <= 2) add('low','Low comfort in spoken English');
+  var sg = get(a,'soft_grid');
+  if(sg && typeof sg === 'object'){
+    if(sg['Giving presentations'] <= 2) add('low','Uncomfortable with presentations');
+    if(sg['Speaking in group discussions'] <= 2) add('low','Uncomfortable in group discussions');
+  }
+  if(hasOpt(a,'demotivators','Family pressure')) add('med','Family pressure affecting motivation');
+  if(hasOpt(a,'demotivators','Money worries')) add('high','Money worries affecting motivation');
+  if(hasOpt(a,'demotivators','Feeling unsupported')) add('med','Feels unsupported / unencouraged');
+  if(hasOpt(a,'absence_reasons','Health')) add('med','Health issues affecting attendance');
+  if(get(a,'help_me')) add('med','Asked the mentor for personal help — read the note');
+  if(get(a,'diff_to_discuss')) add('low','Has something hard to discuss with teachers');
+  if(get(a,'college_issue')) add('low','Reported an issue in the college');
+  return f;
+}
+var LVL = {high:3, med:2, low:1};
+function flagLevel(f){
+  var m = 0; (f||[]).forEach(function(x){ m = Math.max(m, LVL[x.level] || 0); });
+  if(m === 3) return 'High'; if(m === 2) return 'Medium'; if(m === 1) return 'Low'; return 'Clear';
+}
+
+/* ------------------------- 6. REPORT GENERATOR ------------------------- */
+function firstName(n){ return titleCase(String(n||'').split(' ')[0]); }
+function listOut(arr, max){
+  if(!arr || !arr.length) return '';
+  var a = arr.slice(0, max || 3);
+  if(a.length === 1) return a[0];
+  return a.slice(0,-1).join(', ') + ' and ' + a[a.length-1];
+}
+function describe(v){ return v === undefined || v === null || v === '' ? '' : String(v); }
+
+function buildReport(answers, studentName){
+  var a = answers, P = [];
+  var name = studentName || a.__name || 'The student';
+  var fn = firstName(name);
+  var feel = get(a,'feel'), feelLbl = ['finding it hard','not great','okay','good','really positive'][feel ? feel-1 : 2];
+  var att = describe(get(a,'attendance_pct')) || 'not stated';
+  var subj = get(a,'hard_subjects') || [];
+  var reasons = get(a,'hard_reason') || [];
+  var enjoy = describe(get(a,'enjoy'));
+  var st = describe(get(a,'study_time'));
+  var prep = get(a,'prep_exams') || [];
+  var expl = get(a,'online_resources') || [];
+  var dis = get(a,'distractions') || [];
+  var lang = get(a,'languages') || [];
+  var areas = get(a,'interest_areas') || [];
+  var ev = get(a,'events') || [];
+  var career = describe(get(a,'after_grad'));
+  var role = describe(get(a,'career_role'));
+  var now = get(a,'prep_now') || [];
+  var ph = get(a,'placement_help') || [];
+  var ms = get(a,'mentor_support') || [];
+  var dem = get(a,'demotivators') || [];
+
+  /* paragraph 1 — feelings, home, wellbeing */
+  var p1 = fn + ' describes studies and college life as ' + feelLbl + '. ';
+  var cs = describe(get(a,'classroom'));
+  if(cs) p1 += cs.indexOf('Yes') === 0 ? 'They are comfortable with their classmates. ' :
+    ('With classmates they report: "' + cs.toLowerCase() + '". ');
+  if(get(a,'bother') && get(a,'bother') !== 'No, nothing much')
+    p1 += 'Something is currently affecting their studies ("' + String(get(a,'bother')).toLowerCase() + '"' +
+          (get(a,'bother_note') ? ' — ' + get(a,'bother_note') : '') + '). ';
+  var fa = describe(get(a,'family_atmosphere'));
+  var hs = num(a,'home_support');
+  if(fa) p1 += 'Home atmosphere for study: ' + fa.toLowerCase() + (hs ? ' (support at home rated ' + qualWord(hs, 'home') + ')' : '') + '. ';
+  if(get(a,'family_stress')) p1 += 'Family circumstances shared: ' + get(a,'family_stress') + '. ';
+  if(get(a,'financial')) p1 += 'Support requested: ' + get(a,'financial') + '. ';
+  var nt = describe(get(a,'teachers'));
+  if(nt) p1 += 'Approaching teachers: ' + nt.toLowerCase() + '. ';
+  P.push(p1);
+
+  /* paragraph 2 — academics */
+  var p2 = 'Academically, ';
+  p2 += subj.length && !(subj.length===1 && /^nothing/i.test(subj[0])) ?
+        ('the difficult subjects are ' + listOut(subj,4) + ',') : 'no particular subject was flagged as difficult,';
+  if(reasons.length) p2 += ' mainly because of ' + listOut(reasons.map(function(x){ return x.toLowerCase(); }),3) + '. ';
+  else p2 += ' and the reasons were not specified. ';
+  if(enjoy) p2 += 'They enjoy ' + enjoy.charAt(0).toLowerCase() + enjoy.slice(1) + ' ';
+  if(get(a,'understand')) p2 += 'Topics taught in class "' + String(get(a,'understand')).toLowerCase() + '" click. ';
+  if(st) p2 += 'Self-study time: about ' + st.toLowerCase() + ' a day';
+  if(get(a,'revise')) p2 += ', with revision "' + String(get(a,'revise')).toLowerCase() + '"';
+  if(prep.length) p2 += '. Exam preparation: ' + listOut(prep.map(function(x){ return x.toLowerCase(); }),3);
+  p2 += '. ';
+  var asg = describe(get(a,'assignments'));
+  if(asg) p2 += 'Assignments and records: ' + asg.toLowerCase() + '. ';
+  if(get(a,'target')) p2 += 'Target for the semester: ' + get(a,'target') + '. ';
+  if(get(a,'academic_support') === 'Yes') p2 += 'Extra help requested in: ' + describe(get(a,'academic_support_what')) + '. ';
+  P.push(p2);
+
+  /* paragraph 3 — attendance */
+  var p3 = 'Attendance is ' + att;
+  var ab = get(a,'absence_reasons') || [];
+  if(ab.length && !hasOpt(a,'absence_reasons','Nothing in particular'))
+    p3 += ', with absences mainly due to ' + listOut(ab.map(function(x){ return x.toLowerCase(); }),3);
+  if(get(a,'attendance_concerns')) p3 += '. On the 75% rule they said: "' + String(get(a,'attendance_concerns')).toLowerCase() + '"';
+  if(get(a,'improve_regularity')) p3 += '. Their own fix: ' + get(a,'improve_regularity');
+  p3 += '. ';
+  P.push(p3);
+
+  /* paragraph 4 — skills, career, placement */
+  var p4 = 'On skills: programming comfort is ' + (num(a,'prog_comfort') ? qualWord(num(a,'prog_comfort'), 'programming') : 'not stated');
+  var pg = get(a,'placement_grid');
+  if(pg && typeof pg === 'object'){
+    var pgParts = [];
+    if(pg['Aptitude & reasoning']) pgParts.push('aptitude rated ' + qualWord(pg['Aptitude & reasoning']));
+    if(pg['Coding / interview questions']) pgParts.push('coding rated ' + qualWord(pg['Coding / interview questions'], 'programming'));
+    if(pg['Communication & English']) pgParts.push('communication rated ' + qualWord(pg['Communication & English'], 'english'));
+    if(pgParts.length) p4 += ' (' + pgParts.join(', ') + ')';
+  }
+  if(lang.length) p4 += ', knows ' + listOut(lang,4);
+  if(get(a,'prog_rating')) p4 += ', self-rating "' + String(get(a,'prog_rating')).toLowerCase() + '"';
+  if(get(a,'projects')) p4 += '. Projects: ' + get(a,'projects');
+  if(areas.length) p4 += '. Interest areas: ' + listOut(areas,3);
+  if(ev.length) p4 += '. Exposure so far: ' + listOut(ev,3);
+  if(get(a,'skill_next')) p4 += '. Wants to learn ' + get(a,'skill_next') + ' in the next 6 months';
+  p4 += '. ';
+  var p4b = 'Career plan: ' + (career ? career : 'not decided') + (role ? ' (' + role + ')' : '');
+  if(get(a,'higher_studies')) p4b += '; higher-study plan: ' + get(a,'higher_studies');
+  if(get(a,'competitive_exam')) p4b += '; exam preparation: ' + get(a,'competitive_exam');
+  if(now.length) p4b += '. Currently doing: ' + listOut(now,3);
+  if(get(a,'placement_started')) p4b += '. Placement preparation: ' + String(get(a,'placement_started')).toLowerCase();
+  if(get(a,'resume')) p4b += ', resume: ' + String(get(a,'resume')).toLowerCase();
+  if(get(a,'mock_interviews')) p4b += ', mock interviews: ' + String(get(a,'mock_interviews')).toLowerCase();
+  if(get(a,'career_concerns')) p4b += '. Concern: ' + get(a,'career_concerns');
+  p4b += '. ';
+  P.push(p4 + p4b);
+
+  /* paragraph 5 — personal & expectations */
+  var p5 = '';
+  if(get(a,'strength')) p5 += 'Biggest strength: ' + get(a,'strength') + '. ';
+  if(get(a,'motivation')) p5 += 'Motivation: ' + get(a,'motivation') + '. ';
+  if(dem.length) p5 += 'Loses motivation due to ' + listOut(dem.map(function(x){ return x.toLowerCase(); }),3) + '. ';
+  if(num(a,'stress_scale')) p5 += 'Stress handling rated as ' + qualWord(num(a,'stress_scale'), 'stress');
+  var sw = get(a,'stress_ways') || [];
+  if(sw.length) p5 += ' (usually: ' + listOut(sw.map(function(x){ return x.toLowerCase(); }),3) + ')';
+  p5 += '. ';
+  if(num(a,'english_comfort')) p5 += 'Spoken English comfort rated ' + qualWord(num(a,'english_comfort'), 'english') + '. ';
+  var sgrid = get(a,'soft_grid');
+  if(sgrid && typeof sgrid === 'object'){
+    var sgParts = [];
+    if(sgrid['Giving presentations']) sgParts.push('presentations: ' + qualWord(sgrid['Giving presentations']));
+    if(sgrid['Asking questions in class']) sgParts.push('asking questions: ' + qualWord(sgrid['Asking questions in class']));
+    if(sgrid['Speaking in group discussions']) sgParts.push('group discussions: ' + qualWord(sgrid['Speaking in group discussions']));
+    if(sgParts.length) p5 += 'Soft skills self-rating (' + sgParts.join(', ') + '). ';
+  }
+  var sk = get(a,'soft_skill') || [];
+  if(sk.length && sk[0] !== 'Nothing specific') p5 += 'Wants to improve: ' + listOut(sk,2) + '. ';
+  if(ms.length) p5 += 'Expects from the mentor: ' + listOut(ms,3) + '. ';
+  if(get(a,'meet_frequency')) p5 += 'Preferred meeting frequency: ' + String(get(a,'meet_frequency')).toLowerCase() + '.';
+  if(p5) P.push(p5);
+
+  /* suggestions */
+  var S = [];
+  if(anyOf(a,'attendance_pct',['Below 50%','50–65%','65–75%']))
+    S.push('Attendance first: weekly attendance check, sit with the class advisor, and if health or travel is the reason, start the medical/condonation paperwork now.');
+  if(get(a,'academic_support') === 'Yes' || hasOpt(a,'understand','Rarely') || get(a,'understand_help') === 'Yes')
+    S.push('Arrange subject support — extra classes or a weekly doubt session for ' + (describe(get(a,'academic_support_what')) || listOut(get(a,'hard_subjects') || [],2) || 'the weak subjects') + '.');
+  if(reasons.length) S.push('Attack the reason, not the subject: ' + listOut(reasons.map(function(x){ return x.toLowerCase(); }),2) + ' — fix it with a weekly plan and past-question practice.');
+  if(st === 'Less than an hour' || hasOpt(a,'prep_exams','Honestly, I do not prepare much'))
+    S.push('Build a realistic daily study slot (2 focused hours) and shift preparation away from the last 2–3 days before exams.');
+  if(dis.length && !hasOpt(a,'distractions','Nothing much, I stay focused'))
+    S.push('Reduce distraction: phone on silent during study blocks; use a 45-minute study / 10-minute break cycle.');
+  if((num(a,'prog_comfort') || 5) <= 2 || hasOpt(a,'languages','Nothing yet'))
+    S.push('Programming hand-holding: pair with a senior or a study buddy, and finish one small project (30–40 lines) every two weeks.');
+  if(anyOf(a,'portfolio',['No','I do not know what GitHub is']) || get(a,'portfolio_help') === 'Yes')
+    S.push('Set up a GitHub profile and push one small project before the next meeting.');
+  if(get(a,'placement_started') === 'Not started yet' || get(a,'placement_started') === 'Only thinking about it')
+    S.push('Start placement prep small: 10 aptitude questions and 1 coding problem a day, beginning this week.');
+  if(anyOf(a,'resume',['No, not yet','Yes, but it needs work'])) S.push('Prepare a one-page resume together in the next meeting.');
+  if(hasOpt(a,'mock_interviews','No, never')) S.push('Schedule a mock interview (mentor or senior) this month.');
+  if((num(a,'english_comfort') || 5) <= 2) S.push('Spoken English practice: 10 minutes of reading aloud daily plus one group discussion per week.');
+  if((num(a,'stress_scale') || 5) <= 2) S.push('Wellbeing: keep a fortnightly check-in and, if it continues, a confidential session with the college counsellor.');
+  if(get(a,'stress_support') === 'Yes') S.push('Follow up on the counselling / mentor-support request within a week.');
+  if(get(a,'financial')) S.push('Look into fee instalment / scholarship / welfare schemes and get back to the student with options.');
+  if(get(a,'family_stress')) S.push('Handle family-related matters discreetly; do not raise them in an open forum.');
+  if(get(a,'help_me')) S.push('Personal request noted: ' + get(a,'help_me'));
+  if(get(a,'college_issue')) S.push('Take up the reported college issue: ' + get(a,'college_issue'));
+  if(ms.length) S.push('Mentor engagement requested: ' + listOut(ms,3) + ' — set a standing slot (' + String(describe(get(a,'meet_frequency')) || 'fortnightly').toLowerCase() + ').');
+  if(!S.length) S.push('Student is on track — acknowledge the progress and encourage them to keep the routine going.');
+  return { paragraphs:P.filter(function(x){ return x && x.length > 5; }), suggestions:S };
+}
+function reportText(answers, name){
+  var r = buildReport(answers, name);
+  return r.paragraphs.join('\n\n');
+}
+function suggestionText(answers, name){
+  var r = buildReport(answers, name);
+  return r.suggestions.map(function(s,i){ return (i+1) + '. ' + s; }).join('\n');
+}
+function studentResponseText(a){
+  var out = [];
+  if(get(a,'plan_problem')) out.push('Problem to solve: ' + get(a,'plan_problem'));
+  if(get(a,'plan_skill')) out.push('Skill to develop: ' + get(a,'plan_skill'));
+  if(get(a,'plan_action')) out.push('Action before next meeting: ' + get(a,'plan_action'));
+  if(get(a,'plan_support')) out.push('Support requested: ' + get(a,'plan_support'));
+  var w = get(a,'plan_when');
+  out.push('Target date: ' + (w ? fmtDay(w) : 'to be decided'));
+  out.push('Agreed to work on the above with the mentor.');
+  return out.join('\n');
+}
+
+/* ------------------------- app state ------------------------- */
+var CUR = { student:null, mode:'full', step:null, busy:false };
+var MENTOR = { name:'' };
+function loadMentor(){ MENTOR.name = store.get(K_MENTOR, '') || ''; }
+
+/* ------------------------- 4. CHAT ENGINE ------------------------- */
+var streamEl, compEl;
+function scrollDown(){ if(streamEl) streamEl.scrollTop = streamEl.scrollHeight; }
+
+function botSay(text, html, warm){
+  var d = document.createElement('div');
+  d.className = 'msg bot';
+  d.innerHTML = '<div class="avatar">🧑‍🏫</div><div class="bub' + (warm ? ' warm' : '') + '">' +
+    (html ? text : mdLite(text).replace(/\n/g,'<br>')) + '</div>';
+  streamEl.appendChild(d); scrollDown(); return d;
+}
+function meSay(text){
+  var d = document.createElement('div');
+  d.className = 'msg me';
+  d.innerHTML = '<div class="bub">' + esc(text) + '</div>';
+  streamEl.appendChild(d); scrollDown();
+}
+var SEC_COLOR = {
+  'Family & home':'#ec4899','How college is going':'#6d5efc','Subjects & studies':'#f59e0b',
+  'Attendance & routine':'#14b8a6','How you learn':'#3b82f6','Technical skills':'#8b5cf6',
+  'Career & future':'#10b981','Placement preparation':'#ef4444','Communication & confidence':'#f97316',
+  'You, personally':'#6366f1','You & your mentor':'#a855f7','Our action plan':'#059669'
+};
+function sectionBar(title){
+  var c = SEC_COLOR[title] || '#6d5efc';
+  var d = document.createElement('div');
+  d.className = 'secbar';
+  d.style.color = c;
+  d.innerHTML = '<span class="dot" style="background:' + c + '"></span>' + esc(title);
+  streamEl.appendChild(d); scrollDown();
+}
+function typing(cb, ms){
+  var d = document.createElement('div');
+  d.className = 'msg bot';
+  d.innerHTML = '<div class="avatar">🧑‍🏫</div><div class="typing"><span></span><span></span><span></span></div>';
+  streamEl.appendChild(d); scrollDown();
+  setTimeout(function(){
+    if(d.parentNode) d.parentNode.removeChild(d);
+    cb();
+  }, ms === undefined ? (300 + Math.random()*220) : ms);
+}
+function updateProgress(){
+  if(!CUR.student || !CUR.student.draft) return;
+  var a = CUR.student.draft.answers;
+  var c = coreAnswered(a);
+  var pct = Math.min(100, Math.round(c / CORE_TOTAL * 100));
+  document.getElementById('progBar').style.width = pct + '%';
+  document.getElementById('coreCount').textContent = 'Core ' + c + '/' + CORE_TOTAL + ' · ' + askedCount(a) + ' answered';
+}
+
+function startChat(mode, resume){
+  streamEl = document.getElementById('stream');
+  compEl = document.getElementById('composer');
+  CUR.mode = mode;
+  var first = firstName(CUR.student.name);
+  if(!resume || !CUR.student.draft){
+    CUR.student.draft = { mode:mode, answers:{}, order:[], updatedAt:new Date().toISOString() };
+    putStudent(CUR.student);
+  }
+  showScreen('sc-chat');
+  document.getElementById('btnExitChat').classList.remove('hide');
+  document.getElementById('btnHome').classList.remove('hide');
+  document.getElementById('chatSub').textContent =
+    titleCase(CUR.student.name) + ' · ' + CUR.student.reg + ' · ' + (mode === 'quick' ? 'core session' : 'full session');
+  streamEl.innerHTML = '';
+  updateProgress();
+  if(resume && Object.keys(CUR.student.draft.answers).length){
+    renderTranscript();
+    askNext(true);
+  } else {
+    botSay("Hi " + first + "! I'm Mitra 🙂\n\nI'll ask you about your family, your subjects, attendance, skills, plans and how you are feeling — and your mentor will get a clear picture of how to help you.\n\nTake your time. There are no wrong answers, and you can skip anything you would rather not answer.", false, true);
+    setTimeout(function(){ askNext(true); }, 500);
+  }
+}
+function saveDraft(){
+  if(!CUR.student || !CUR.student.draft) return;
+  CUR.student.draft.updatedAt = new Date().toISOString();
+  putStudent(CUR.student);
+}
+function renderTranscript(){
+  var dr = CUR.student.draft;
+  streamEl.innerHTML = '';
+  var lastSec = null;
+  dr.order.forEach(function(id){
+    var s = stepById(id); if(!s) return;
+    if(s.sec !== lastSec){ sectionBar(s.sec); lastSec = s.sec; }
+    botSay(s.q);
+    var ans = dr.answers[id];
+    meSay(ans ? (ans.d === '' || ans.d === undefined ? '— skipped —' : ans.d) : '— skipped —');
+  });
+  botSay('(carrying on from where you stopped…)');
+  updateProgress();
+}
+function askNext(silent){
+  var dr = CUR.student.draft;
+  var s = nextStep(dr.answers, dr.mode);
+  if(!s){ finishSession(); return; }
+  CUR.step = s;
+  var last = dr.order.length ? stepById(dr.order[dr.order.length-1]) : null;
+  var go = function(){
+    if(!last || last.sec !== s.sec) sectionBar(s.sec);
+    botSay(s.q);
+    if(s.hint) botSay('<span class="hint">' + esc(s.hint) + '</span>', true);
+    renderComposer(s);
+  };
+  if(silent) go(); else typing(go);
+}
+function commit(step, val){
+  var dr = CUR.student.draft;
+  dr.answers[step.id] = { v:val, d:displayOf(step, val), t:new Date().toISOString() };
+  if(dr.order.indexOf(step.id) === -1) dr.order.push(step.id);
+  saveDraft();
+  updateProgress();
+  var first = firstName(CUR.student.name);
+  typing(function(){
+    botSay(ackFor(step, val, first), false, true);
+    setTimeout(function(){ askNext(true); }, 340);
+  });
+}
+function skipBtn(step, label, onSkip){
+  var d = document.createElement('div'); d.className = 'skips';
+  var b = document.createElement('button');
+  b.textContent = label || step.skipLabel || 'Skip this question';
+  b.onclick = onSkip;
+  d.appendChild(b);
+  return d;
+}
+function renderComposer(step){
+  compEl.innerHTML = '';
+
+  if(step.type === 'text' || step.type === 'date'){
+    var row = document.createElement('div'); row.className = 'row';
+    var wrap = document.createElement('div'); wrap.style.flex = '1';
+    var inp = document.createElement('input');
+    inp.type = step.type === 'date' ? 'date' : 'text';
+    inp.placeholder = step.placeholder || '';
+    wrap.appendChild(inp);
+    var send = document.createElement('button'); send.className = 'btn'; send.textContent = 'Send';
+    row.appendChild(wrap); row.appendChild(send);
+    compEl.appendChild(row);
+    var doSend = function(){
+      var v = inp.value.trim();
+      if(!v){ if(step.optional){ meSay('— skipped —'); commit(step, ''); return; } toast('Type a short answer, or skip this one.'); return; }
+      meSay(displayOf(step, v)); commit(step, v);
+    };
+    send.onclick = doSend;
+    inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') doSend(); });
+    if(step.chips && step.chips.length){
+      var cr = document.createElement('div'); cr.className = 'chips'; cr.style.marginTop = '10px';
+      step.chips.forEach(function(c){
+        var b = document.createElement('button'); b.className = 'chip'; b.textContent = c;
+        b.onclick = function(){
+          if(inp.value.indexOf(c) === -1) inp.value = (inp.value ? inp.value + ', ' : '') + c;
+          inp.focus();
+        };
+        cr.appendChild(b);
+      });
+      compEl.appendChild(cr);
+    }
+    if(step.optional) compEl.appendChild(skipBtn(step, null, function(){ meSay('— skipped —'); commit(step, ''); }));
+    setTimeout(function(){ try{ inp.focus(); }catch(e){} }, 60);
+    return;
+  }
+
+  if(step.type === 'choice' || step.type === 'yesno'){
+    var opts = step.type === 'yesno' ? ['Yes','No'] : step.opts;
+    var c1 = document.createElement('div'); c1.className = 'chips';
+    opts.forEach(function(o){
+      var b = document.createElement('button'); b.className = 'chip'; b.textContent = o;
+      b.onclick = function(){ meSay(o); commit(step, o); };
+      c1.appendChild(b);
+    });
+    compEl.appendChild(c1);
+    if(step.optional) compEl.appendChild(skipBtn(step, null, function(){ meSay('— skipped —'); commit(step, ''); }));
+    return;
+  }
+
+  if(step.type === 'multi'){
+    var sel = [];
+    var c2 = document.createElement('div'); c2.className = 'chips';
+    step.opts.forEach(function(o){
+      var b = document.createElement('button'); b.className = 'chip'; b.textContent = o;
+      b.onclick = function(){
+        // Single click direct answer when no "other" text is typed
+        if(!step.allowOther){
+          meSay(o); commit(step, [o]);
+          return;
+        }
+        var i = sel.indexOf(o);
+        if(i === -1){ sel.push(o); b.classList.add('on'); } else { sel.splice(i,1); b.classList.remove('on'); }
+        if(confBtn) confBtn.disabled = sel.length === 0;
+      };
+      c2.appendChild(b);
+    });
+    compEl.appendChild(c2);
+
+    var confBtn = null;
+    if(step.allowOther){
+      var orow = document.createElement('div'); orow.className = 'confirm-bar';
+      var other = document.createElement('input'); other.type = 'text';
+      other.placeholder = 'Or type another subject / reason…'; other.style.maxWidth = '300px';
+      orow.appendChild(other);
+      confBtn = document.createElement('button'); confBtn.className = 'btn-confirm';
+      confBtn.textContent = '✓ Confirm selection'; confBtn.disabled = true;
+      confBtn.onclick = function(){
+        var v = sel.slice();
+        if(other.value.trim()) v.push(other.value.trim());
+        if(!v.length){ toast('Pick at least one, please.'); return; }
+        meSay(v.join(', ')); commit(step, v);
+      };
+      other.addEventListener('input', function(){
+        confBtn.disabled = (sel.length === 0 && !other.value.trim());
+      });
+      other.addEventListener('keydown', function(e){ if(e.key === 'Enter') confBtn.click(); });
+      orow.appendChild(confBtn);
+      compEl.appendChild(orow);
+      var tip = document.createElement('div'); tip.className = 'hint';
+      tip.style.marginTop = '6px';
+      tip.textContent = '💡 Tip: Click options to select, then click "Confirm selection" when ready.';
+      compEl.appendChild(tip);
+    }
+    if(step.optional) compEl.appendChild(skipBtn(step, null, function(){ meSay('— skipped —'); commit(step, ''); }));
+    return;
+  }
+
+  if(step.type === 'scale'){
+    var c3 = document.createElement('div');
+    var opts = step.funOptions || [
+      {score:1,word:'Needs improvement',emoji:'🌧️',sub:'Level 1'},
+      {score:2,word:'Below average',emoji:'⛅',sub:'Level 2'},
+      {score:3,word:'Satisfactory',emoji:'🌤️',sub:'Level 3'},
+      {score:4,word:'Good',emoji:'☀️',sub:'Level 4'},
+      {score:5,word:'Excellent',emoji:'🌈',sub:'Level 5'}
+    ];
+    c3.className = 'scale fun';
+    opts.forEach(function(opt){
+      var card = document.createElement('button');
+      card.className = 'funcard';
+      card.innerHTML = '<span class="f-emoji">' + opt.emoji + '</span>' +
+        '<span class="f-word">' + esc(opt.word) + '</span>' +
+        (opt.sub ? '<span class="f-sub">' + esc(opt.sub) + '</span>' : '');
+      card.onclick = function(){
+        // Single click immediately registers the answer — no Done tab needed!
+        card.classList.add('on');
+        meSay(opt.emoji + ' ' + opt.word);
+        commit(step, opt.score);
+      };
+      c3.appendChild(card);
+    });
+    compEl.appendChild(c3);
+    if(step.optional) compEl.appendChild(skipBtn(step, null, function(){ meSay('— skipped —'); commit(step, ''); }));
+    return;
+  }
+
+  if(step.type === 'grid'){
+    var vals = {};
+    var box = document.createElement('div');
+    var funLevels = [
+      {score:1,word:'Needs work',emoji:'🌧️'},
+      {score:2,word:'Below avg',emoji:'⛅'},
+      {score:3,word:'Satisfactory',emoji:'🌤️'},
+      {score:4,word:'Good',emoji:'☀️'},
+      {score:5,word:'Confident',emoji:'⭐'}
+    ];
+    step.items.forEach(function(it){
+      var r = document.createElement('div'); r.className = 'gridrow';
+      var l = document.createElement('div'); l.className = 'lbl'; l.textContent = it;
+      r.appendChild(l);
+      var sc = document.createElement('div'); sc.className = 'scale';
+      funLevels.forEach(function(fl){
+        var b = document.createElement('button');
+        b.className = 'chip';
+        b.innerHTML = fl.emoji + ' ' + fl.word;
+        b.onclick = function(){
+          vals[it] = fl.score;
+          for(var q=0;q<sc.children.length;q++) sc.children[q].classList.remove('on');
+          b.classList.add('on');
+          // Automatically advance as soon as all rows in the grid have been clicked!
+          if(Object.keys(vals).length === step.items.length){
+            var summaryDisplay = step.items.map(function(k){
+              return k + ': ' + qualWord(vals[k]);
+            }).join(' · ');
+            meSay(summaryDisplay);
+            commit(step, vals);
+          }
+        };
+        sc.appendChild(b);
+      });
+      r.appendChild(sc); box.appendChild(r);
+    });
+    compEl.appendChild(box);
+    var tipGrid = document.createElement('div'); tipGrid.className = 'hint';
+    tipGrid.style.marginTop = '8px';
+    tipGrid.textContent = '💡 Click an option for each item — it advances automatically when you finish the last one!';
+    compEl.appendChild(tipGrid);
+    if(step.optional) compEl.appendChild(skipBtn(step, null, function(){ meSay('— skipped —'); commit(step, ''); }));
+    return;
+  }
+
+  var fb = document.createElement('button'); fb.className = 'btn'; fb.textContent = 'Continue';
+  fb.onclick = function(){ commit(step, ''); };
+  compEl.appendChild(fb);
+}
+
+/* ------------------------- finish ------------------------- */
+
+/* ------------------------- GOOGLE SHEETS CLOUD SYNC ------------------------- */
+function getGScriptUrl(){
+  return store.get(K_GSYNC, '');
+}
+function setGScriptUrl(u){
+  store.set(K_GSYNC, (u || '').trim());
+}
+
+function syncMeetingToCloud(student, meeting){
+  var url = getGScriptUrl();
+  if(!url) return; // not configured yet
+  var payload = {
+    action: 'submitMeeting',
+    student: {
+      reg: student.reg,
+      name: student.name,
+      branch: student.branch,
+      sem: student.sem,
+      note: student.note || '',
+      reviewed: !!student.reviewed
+    },
+    meeting: meeting,
+    flags: computeFlags(meeting.answers || {}),
+    attentionLevel: flagLabel(computeFlags(meeting.answers || {}))
+  };
+
+  try{
+    // Use no-cors mode so browser never blocks Google Apps Script redirects
+    fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(){
+      console.log('Meeting synced to Google Sheet');
+    }).catch(function(err){
+      console.warn('Google Sheet background sync notice:', err);
+    });
+  }catch(e){
+    console.warn('Sync failed:', e);
+  }
+}
+
+function fetchAllFromCloud(cb){
+  var url = getGScriptUrl();
+  if(!url){
+    if(cb) cb(false, 'No Google Apps Script URL configured yet.');
+    return;
+  }
+  var fetchUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'action=getAll&t=' + Date.now();
+  fetch(fetchUrl)
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(data && data.status === 'success' && Array.isArray(data.students)){
+        var list = allStudents();
+        var incoming = data.students;
+        var updatedCount = 0;
+        incoming.forEach(function(inc){
+          var idx = findIdx(list, inc.reg);
+          if(idx >= 0){
+            // merge meetings
+            if(Array.isArray(inc.meetings) && inc.meetings.length){
+              list[idx].meetings = inc.meetings;
+            }
+            if(inc.note) list[idx].note = inc.note;
+            if(inc.reviewed !== undefined) list[idx].reviewed = inc.reviewed;
+            updatedCount++;
+          }
+        });
+        saveStudents(list);
+        if(cb) cb(true, 'Synced ' + updatedCount + ' student records from Google Sheets!');
+      } else {
+        if(cb) cb(false, (data && data.message) || 'Unexpected response format from Google Sheets');
+      }
+    })
+    .catch(function(err){
+      if(cb) cb(false, 'Could not connect to Google Sheets. Verify the Web App URL.');
+    });
+}
+
+function finishSession(){
+  var dr = CUR.student.draft;
+  if(!dr || askedCount(dr.answers) === 0){ toast('Nothing answered yet.'); return; }
+  var a = dr.answers;
+  var now = new Date().toISOString();
+  var meeting = {
+    no: (CUR.student.meetings ? CUR.student.meetings.length : 0) + 1,
+    date: now,
+    discussions: reportText(a, CUR.student.name) + '\n\n[Attention flags: ' + (computeFlags(a).map(function(f){ return f.level.toUpperCase() + ' - ' + f.text; }).join('; ') || 'none') + ']',
+    suggestions: suggestionText(a, CUR.student.name),
+    response: studentResponseText(a),
+    studentSign: '', mentorSign: '',
+    sessionMode: dr.mode, answers: a, order: dr.order,
+    auto: true
+  };
+  if(!CUR.student.meetings) CUR.student.meetings = [];
+  CUR.student.meetings.push(meeting);
+  CUR.student.draft = null;
+  putStudent(CUR.student);
+  syncMeetingToCloud(CUR.student, meeting);
+  renderDone(meeting);
+  showScreen('sc-done');
+  document.getElementById('btnExitChat').classList.add('hide');
+  document.getElementById('btnHome').classList.add('hide');
+}
+function renderDone(meeting){
+  var a = meeting.answers || {};
+  var flags = computeFlags(a);
+  var first = firstName(CUR.student.name);
+  var html = '<h1>Thank you, ' + esc(first) + ' 🌟</h1>' +
+    '<p class="muted">You answered ' + askedCount(a) + ' questions. Your mentor can now see this and it has been added to your mentoring record.</p>';
+
+  html += '<div class="card" style="box-shadow:none;border-color:#ddd6fe;margin:16px 0"><h3>Your action plan</h3>' +
+    '<div class="kv"><b>Problem to solve</b><span>' + (get(a,'plan_problem') ? esc(get(a,'plan_problem')) : '<i>not answered</i>') + '</span></div>' +
+    '<div class="kv"><b>Skill to develop</b><span>' + (get(a,'plan_skill') ? esc(get(a,'plan_skill')) : '<i>not answered</i>') + '</span></div>' +
+    '<div class="kv"><b>Before the next meeting</b><span>' + (get(a,'plan_action') ? esc(get(a,'plan_action')) : '<i>not answered</i>') + '</span></div>' +
+    '<div class="kv"><b>Support I will give</b><span>' + (get(a,'plan_support') ? esc(get(a,'plan_support')) : '<i>not answered</i>') + '</span></div>' +
+    '<div class="kv"><b>By</b><span>' + (get(a,'plan_when') ? esc(fmtDay(get(a,'plan_when'))) : 'to be decided') + '</span></div></div>';
+
+  if(flags.length){
+    html += '<div class="note ok" style="margin-bottom:14px"><b>What your mentor will follow up on</b><br>' +
+      flags.filter(function(f){ return f.level !== 'low'; }).slice(0,5).map(function(f){ return '• ' + esc(f.text); }).join('<br>') + '</div>';
+  }
+  html += '<div class="note">Your answers are confidential — only your mentor can see them. If anything here is worrying you, please talk to ' +
+    esc(MENTOR.name || 'your mentor') + ' or the college counsellor. You did well to speak about it today. 💜</div>';
+  html += '<div class="row" style="margin-top:16px"><button class="btn" id="btnNewSess">Start another session</button>' +
+    '<button class="btn grey" id="btnDoneHome">Sign out</button></div>';
+
+  document.getElementById('doneCard').innerHTML = html;
+  document.getElementById('btnNewSess').onclick = function(){ renderModeScreen(); showScreen('sc-mode'); };
+  document.getElementById('btnDoneHome').onclick = function(){ CUR.student = null; store.set(K_SESS, null); showScreen('sc-home'); };
+}
+
+/* ------------------------- session mode screen ------------------------- */
+function renderModeScreen(){
+  var rec = CUR.student, first = firstName(rec.name);
+  var d = rec.draft, meetings = rec.meetings ? rec.meetings.length : 0;
+  var html = '<h1>Hi ' + esc(first) + ' 👋</h1><p class="muted">' + esc(titleCase(rec.name)) + ' · ' + esc(rec.reg) + ' · ' + esc(rec.branch) + ' · ' + esc(rec.sem) + '</p>';
+  if(meetings) html += '<div class="note ok" style="margin:12px 0">You have already completed ' + meetings + ' mentoring session' + (meetings>1?'s':'') + '. You can always do another one.</div>';
+  if(d && askedCount(d.answers) > 0){
+    html += '<div class="note warn" style="margin:12px 0">You have an unfinished session — ' + askedCount(d.answers) + ' question(s) answered, last touched ' + fmtDate(d.updatedAt) + '.</div>' +
+      '<div class="row" style="margin:14px 0"><button class="btn" id="btnResume">▶ Carry on where I stopped</button>' +
+      '<button class="btn grey" id="btnFresh">Start again</button></div>';
+  } else {
+    html += '<h3 style="margin-top:18px">How much would you like to answer today?</h3>' +
+      '<div class="row" style="align-items:stretch;gap:14px">' +
+      '<div class="card" style="max-width:300px;box-shadow:none;border-top:5px solid #6d5efc">' +
+        '<b>Short chat <span class="tag ok">recommended</span></b>' +
+        '<p class="muted">The 15 key questions plus family background and the closing action plan. About 12–15 minutes.</p>' +
+        '<button class="btn sm" data-mode="quick">Start short chat</button></div>' +
+      '<div class="card" style="max-width:300px;box-shadow:none;border-top:5px solid #ec4899">' +
+        '<b>Full chat</b>' +
+        '<p class="muted">Everything — studies, attendance, learning habits, technical skills, career, placement, confidence and support. About 30–40 minutes.</p>' +
+        '<button class="btn pink sm" data-mode="full">Start full chat</button></div>' +
+      '</div>';
+  }
+  html += '<div class="row" style="margin-top:18px"><button class="btn grey sm" data-logout>Sign out</button></div>';
+  document.getElementById('modeCard').innerHTML = html;
+
+  var rm = document.getElementById('btnResume'); if(rm) rm.onclick = function(){ startChat(d.mode || 'full', true); };
+  var fr = document.getElementById('btnFresh'); if(fr) fr.onclick = function(){ CUR.student.draft = null; putStudent(CUR.student); renderModeScreen(); };
+  var mbs = document.querySelectorAll('[data-mode]');
+  for(var i=0;i<mbs.length;i++) mbs[i].onclick = function(){ startChat(this.getAttribute('data-mode'), false); };
+  var lo = document.querySelector('[data-logout]');
+  if(lo) lo.onclick = function(){ store.set(K_SESS, null); CUR.student = null; showScreen('sc-home'); };
+}
+
+/* ------------------------- login / role switching ------------------------- */
+function fillRosterUI(){
+  var dl = document.getElementById('rosterNames'), html = '';
+  ROSTER.forEach(function(r){ html += '<option value="' + esc(titleCase(r[1])) + '">' + esc(r[0]) + '</option>'; });
+  dl.innerHTML = html;
+}
+function setRole(role){
+  document.getElementById('paneStudent').classList.toggle('hide', role !== 'student');
+  document.getElementById('paneMentor').classList.toggle('hide', role !== 'mentor');
+  if(role === 'mentor') renderMentorPane();
+}
+function renderMentorPane(){
+  var pass = store.get(K_PASS, '');
+  var box = document.getElementById('mentorPaneBody');
+  if(!pass){
+    box.innerHTML = '<p class="muted">First time here? Set up your mentor access — create your own password and tell me your name (it appears on the mentoring records).</p>' +
+      '<label for="mname">Mentor name</label><input type="text" id="mname" placeholder="e.g. Dr. Sreeja K" value="' + esc(MENTOR.name) + '">' +
+      '<label for="mp1">Create password</label><input type="password" id="mp1" placeholder="at least 4 characters">' +
+      '<label for="mp2">Confirm password</label><input type="password" id="mp2" placeholder="same again">' +
+      '<div id="msetErr" style="margin-top:12px"></div>' +
+      '<div class="row" style="margin-top:16px"><button class="btn" id="doSetup">Create mentor access</button></div>';
+    document.getElementById('doSetup').onclick = function(){
+      var n = document.getElementById('mname').value.trim();
+      var p1 = document.getElementById('mp1').value, p2 = document.getElementById('mp2').value;
+      var e = document.getElementById('msetErr');
+      if(!n){ e.innerHTML = '<div class="note bad">Please enter your name.</div>'; return; }
+      if(p1.length < 4){ e.innerHTML = '<div class="note bad">Password should be at least 4 characters.</div>'; return; }
+      if(p1 !== p2){ e.innerHTML = '<div class="note bad">The two passwords do not match.</div>'; return; }
+      store.set(K_PASS, p1); store.set(K_MENTOR, n); MENTOR.name = n;
+      toast('Mentor access created. Keep your password safe.');
+      openDashboard();
+    };
+  } else {
+    box.innerHTML = '<p class="muted">Welcome back' + (MENTOR.name ? ', ' + esc(MENTOR.name) : '') + '. Enter your password to open the mentoring records.</p>' +
+      '<label for="mpass">Password</label><input type="password" id="mpass" placeholder="your mentor password">' +
+      '<div id="mlogErr" style="margin-top:12px"></div>' +
+      '<div class="row" style="margin-top:16px"><button class="btn" id="doMlogin">Open dashboard →</button>' +
+      '<button class="btn grey sm" id="forgot">Forgot password?</button></div>' +
+      '<p class="muted" style="margin-top:10px">Students cannot see this dashboard.</p>';
+    var submit = function(){
+      if(document.getElementById('mpass').value !== store.get(K_PASS,'')){ document.getElementById('mlogErr').innerHTML = '<div class="note bad">That password is not right.</div>'; return; }
+      openDashboard();
+    };
+    document.getElementById('doMlogin').onclick = submit;
+    document.getElementById('mpass').addEventListener('keydown', function(e){ if(e.key === 'Enter') submit(); });
+    document.getElementById('forgot').onclick = function(){
+      var box2 = document.getElementById('modalBox');
+      box2.innerHTML = '<h2>Reset mentor access</h2><p class="muted">There is no email recovery in this offline tool. If you have forgotten the password you can reset mentor access here — <b>student records are not deleted</b> — and set a new password.</p>' +
+        '<div class="row" style="margin-top:14px"><button class="btn pink sm" id="doReset">Reset and set a new password</button>' +
+        '<button class="btn grey sm" id="closeReset">Cancel</button></div>';
+      document.getElementById('modal').classList.add('on');
+      document.getElementById('doReset').onclick = function(){
+        store.set(K_PASS, ''); document.getElementById('modal').classList.remove('on'); renderMentorPane();
+        toast('Set a new mentor password now.');
+      };
+      document.getElementById('closeReset').onclick = function(){ document.getElementById('modal').classList.remove('on'); };
+    };
+  }
+}
+document.getElementById('roleSel').onchange = function(){ setRole(this.value); };
+
+document.getElementById('doSlogin').onclick = function(){
+  var nameIn = document.getElementById('sname').value.trim();
+  var pass = normReg(document.getElementById('spass').value);
+  var sem = document.getElementById('ssem').value;
+  var err = document.getElementById('sloginErr');
+  if(!nameIn){ err.innerHTML = '<div class="note bad">Please enter your name.</div>'; return; }
+  if(!pass){ err.innerHTML = '<div class="note bad">Your password is your register number, e.g. NCE24AM001.</div>'; return; }
+
+  var byName = rosterFindByName(nameIn);
+  var byReg = rosterByReg(pass);
+  if(byName.type === 'many'){
+    err.innerHTML = '<div class="note warn">More than one student matches "' + esc(nameIn) + '": ' + byName.list.map(function(r){ return esc(titleCase(r[1])); }).join(', ') + '. Please type the full name.</div>';
+    return;
+  }
+  if(byName.type === 'none'){
+    err.innerHTML = byReg
+      ? '<div class="note warn">The register number ' + esc(byReg[0]) + ' belongs to <b>' + esc(titleCase(byReg[1])) + '</b>. Please check the name you typed.</div>'
+      : '<div class="note bad">I could not find that name in the AI &amp; ML class list. Try typing just your name as it appears in the roll list.</div>';
+    return;
+  }
+  var found = byName.rec;
+  if(pass !== found[0]){
+    err.innerHTML = '<div class="note bad">That password is not right for ' + esc(titleCase(found[1])) + '. Your password is <b>your own register number</b> (example: NCE24AM001).</div>';
+    return;
+  }
+  err.innerHTML = '';
+  seedRoster();
+  var rec = getStudent(found[0]);
+  rec.name = found[1]; rec.branch = BRANCH; rec.sem = sem;
+  putStudent(rec);
+  store.set(K_SESS, found[0]);
+  CUR.student = rec;
+  renderModeScreen();
+  showScreen('sc-mode');
+};
+document.getElementById('sname').addEventListener('keydown', function(e){ if(e.key === 'Enter') document.getElementById('spass').focus(); });
+document.getElementById('spass').addEventListener('keydown', function(e){ if(e.key === 'Enter') document.getElementById('doSlogin').click(); });
+
+document.getElementById('btnExitChat').onclick = function(){
+  saveDraft();
+  CUR.student = null; store.set(K_SESS, null);
+  document.getElementById('btnExitChat').classList.add('hide');
+  document.getElementById('btnHome').classList.add('hide');
+  showScreen('sc-home');
+  toast('Saved — sign in again with your name and register number to carry on.');
+};
+document.getElementById('btnHome').onclick = function(){
+  if(document.getElementById('sc-chat').classList.contains('active')) saveDraft();
+  if(CUR.student){ renderModeScreen(); showScreen('sc-mode'); }
+  else showScreen('sc-home');
+};
+
+/* ------------------------- 8. MENTOR DASHBOARD ------------------------- */
+var view = { idx:-1 };
+function openDashboard(){
+  showScreen('sc-mentor');
+  document.getElementById('btnExitChat').classList.add('hide');
+  document.getElementById('btnHome').classList.add('hide');
+  var w = document.getElementById('whoami');
+  w.classList.remove('hide');
+  w.textContent = (MENTOR.name ? MENTOR.name : 'Mentor') + ' · sign out';
+  w.onclick = function(){ w.classList.add('hide'); showScreen('sc-home'); setRole('mentor'); };
+  renderDashboard();
+}
+function meetCount(r){ return r.meetings ? r.meetings.length : 0; }
+function statusOf(r){
+  if(r.draft && askedCount(r.draft.answers) > 0) return 'In progress';
+  if(meetCount(r)) return 'Session done';
+  return 'Not started';
+}
+function latestAnswersOf(r){
+  if(r.meetings && r.meetings.length) return r.meetings[r.meetings.length-1].answers || {};
+  if(r.draft) return r.draft.answers;
+  return {};
+}
+function renderDashboard(){
+  var list = allStudents();
+  var q = document.getElementById('search').value.trim().toUpperCase();
+  var only = document.getElementById('onlyFlag').checked;
+  var done = 0, prog = 0, flaggy = 0, rows = [];
+  list.forEach(function(r, i){
+    var st = statusOf(r);
+    var a = latestAnswersOf(r);
+    var flags = computeFlags(a);
+    var lvl = flagLevel(flags);
+    if(st === 'Session done') done++;
+    if(st === 'In progress') prog++;
+    if(lvl === 'High' || lvl === 'Medium') flaggy++;
+    if(q && normName(r.name).indexOf(q) === -1 && normReg(r.reg).indexOf(q) === -1) return;
+    if(only && !(lvl === 'High' || lvl === 'Medium')) return;
+    rows.push({ r:r, i:i, st:st, flags:flags, lvl:lvl, a:a });
+  });
+  document.getElementById('kStuds').textContent = list.length;
+  document.getElementById('kDone').textContent = done;
+  document.getElementById('kDraft').textContent = list.length - done;
+  document.getElementById('kFlag').textContent = flaggy;
+  document.getElementById('mentorSub').textContent = 'Mentor: ' + (MENTOR.name || '—') + ' · ' +
+    ROSTER.length + ' students on roll (' + BRANCH + ') · ' + (HAS_LS ? 'records saved in this browser' : 'preview mode — not saved');
+  document.getElementById('listCount').textContent = rows.length + ' shown';
+
+  var tb = document.getElementById('studRows'); tb.innerHTML = '';
+  rows.forEach(function(x){
+    var r = x.r, a = x.a;
+    var tr = document.createElement('tr');
+    var chips = '';
+    var visible = x.flags.filter(function(f){ return f.level !== 'low'; });
+    if(!visible.length) visible = x.flags.slice(0,2);
+    if(visible.length){
+      chips = visible.slice(0,2).map(function(f){ return '<span class="tag ' + f.level + '">' + esc(f.text) + '</span>'; }).join('');
+      if(x.flags.length > 2) chips += '<span class="tag low">+' + (x.flags.length - 2) + ' more</span>';
+    } else chips = '<span class="tag ok">Nothing flagged</span>';
+    var concern = '';
+    if(a && Object.keys(a).length){
+      if(get(a,'plan_action')) concern = esc(get(a,'plan_action'));
+      else if(get(a,'hard_subjects') && get(a,'hard_subjects').length) concern = 'Difficult: ' + esc(listOut(get(a,'hard_subjects'),2));
+    }
+    var attach = !a.plan_when || !get(a,'plan_when') ? '' : '<div class="muted" style="font-size:11.6px">by ' + esc(fmtDay(get(a,'plan_when'))) + '</div>';
+    tr.innerHTML =
+      '<td>' + (x.i + 1) + '</td>' +
+      '<td><b>' + esc(r.reg) + '</b></td>' +
+      '<td><div class="row" style="gap:9px;flex-wrap:nowrap"><div class="avatar" style="background:linear-gradient(110deg,#eef0ff,#fdf2f8);color:#5b21b6">' + esc(initials(r.name)) + '</div>' +
+        '<div><b>' + esc(titleCase(r.name)) + '</b><div class="muted" style="font-size:11.6px">' + esc(r.sem || '') + '</div></div></div></td>' +
+      '<td><span class="tag ' + (x.st === 'Session done' ? 'ok' : x.st === 'In progress' ? 'med' : 'low') + '">' + x.st + '</span>' +
+        (r.meetings && r.meetings.length ? '<div class="muted" style="font-size:11.6px">' + fmtDay(r.meetings[r.meetings.length-1].date) + '</div>' : '') + '</td>' +
+      '<td style="text-align:center">' + meetCount(r) + '</td>' +
+      '<td><span class="tag ' + (x.lvl === 'High' ? 'high' : x.lvl === 'Medium' ? 'med' : x.lvl === 'Low' ? 'low' : 'ok') + '">' + x.lvl + '</span></td>' +
+      '<td style="max-width:280px">' + chips + (concern ? '<div style="margin-top:6px;font-size:12.4px">' + concern + '</div>' : '') + attach + '</td>' +
+      '<td><div class="row" style="gap:6px;flex-wrap:nowrap">' +
+        '<button class="btn sm" data-open="' + r.reg + '">Record</button>' +
+        '<button class="btn ghost sm" data-xl="' + r.reg + '">Excel</button></div></td>';
+    tb.appendChild(tr);
+  });
+  document.getElementById('emptyState').textContent = rows.length ? '' :
+    (list.length ? 'No students match this filter.' : 'No students yet.');
+  var bs = tb.querySelectorAll('[data-open]');
+  for(var i=0;i<bs.length;i++) bs[i].onclick = function(){ openStudent(this.getAttribute('data-open')); };
+  var xs = tb.querySelectorAll('[data-xl]');
+  for(var j=0;j<xs.length;j++) xs[j].onclick = function(){ exportExcel([getStudent(this.getAttribute('data-xl'))], 'mentoring-record-' + this.getAttribute('data-xl')); };
+}
+document.getElementById('search').oninput = renderDashboard;
+document.getElementById('onlyFlag').onchange = renderDashboard;
+document.getElementById('backToDash').onclick = function(){ showScreen('sc-mentor'); };
+document.getElementById('btnPrint').onclick = function(){ window.print(); };
+
+document.getElementById('btnSyncCloud').onclick = function(){
+  var currentUrl = getGScriptUrl();
+  var box = document.getElementById('modalBox');
+  box.innerHTML = '<h2>☁️ Google Sheets Cloud Sync</h2>' +
+    '<p class="muted">Connect this mentoring tool directly to your Google Sheet so all 67 students automatically submit their responses into a single sheet in real time.</p>' +
+    '<label for="gsUrl">Google Apps Script Web App URL</label>' +
+    '<input type="text" id="gsUrl" placeholder="https://script.google.com/macros/s/.../exec" value="' + esc(currentUrl) + '">' +
+    '<div class="row" style="margin-top:14px">' +
+      '<button class="btn sm" id="saveGsUrl">Save & Pull Latest from Sheet</button>' +
+      '<button class="btn ghost sm" id="pullOnly">Pull Responses Now</button>' +
+      '<button class="btn grey sm" id="closeGs">Close</button>' +
+    '</div>' +
+    '<div id="syncStatus" style="margin-top:12px"></div>' +
+    '<hr style="border:0;border-top:1.4px solid #eee;margin:18px 0">' +
+    '<h3>Quick 2-minute Setup Guide</h3>' +
+    '<ol style="font-size:13.2px;line-height:1.6;color:#3b4568;padding-left:18px">' +
+      '<li>Open a Google Sheet on your Google Drive.</li>' +
+      '<li>Click <b>Extensions ➔ Apps Script</b> in the top menu.</li>' +
+      '<li>Paste the code from <b>google-apps-script.js</b> (saved in your folder).</li>' +
+      '<li>Click <b>Deploy ➔ New deployment</b> ➔ select <b>Web app</b>.</li>' +
+      '<li>Set <i>Execute as:</i> <b>Me</b>, and <i>Who has access:</i> <b>Anyone</b>.</li>' +
+      '<li>Click <b>Deploy</b> and paste the generated URL above!</li>' +
+    '</ol>';
+
+  document.getElementById('modal').classList.add('on');
+
+  document.getElementById('saveGsUrl').onclick = function(){
+    var u = document.getElementById('gsUrl').value.trim();
+    setGScriptUrl(u);
+    var statusEl = document.getElementById('syncStatus');
+    statusEl.innerHTML = '<div class="note">Connecting to Google Sheet...</div>';
+    fetchAllFromCloud(function(ok, msg){
+      if(ok){
+        statusEl.innerHTML = '<div class="note ok">' + esc(msg) + '</div>';
+        renderDashboard();
+        toast('Connected to Google Sheet!');
+      } else {
+        statusEl.innerHTML = '<div class="note warn">' + esc(msg) + ' (URL saved anyway)</div>';
+      }
+    });
+  };
+
+  document.getElementById('pullOnly').onclick = function(){
+    var statusEl = document.getElementById('syncStatus');
+    statusEl.innerHTML = '<div class="note">Pulling latest responses...</div>';
+    fetchAllFromCloud(function(ok, msg){
+      statusEl.innerHTML = '<div class="note ' + (ok ? 'ok' : 'bad') + '">' + esc(msg) + '</div>';
+      if(ok){ renderDashboard(); toast('Pulled latest records!'); }
+    });
+  };
+
+  document.getElementById('closeGs').onclick = function(){
+    document.getElementById('modal').classList.remove('on');
+  };
+};
+
+document.getElementById('btnExportAll').onclick = function(){
+  var list = allStudents();
+  if(!list.length){ toast('No students to export.'); return; }
+  exportExcel(list, 'mentoring-records-' + BRANCH.replace(/[^A-Za-z0-9]/g,''));
+};
+document.getElementById('btnExportOne').onclick = function(){
+  var r = allStudents()[view.idx];
+  if(r) exportExcel([r], 'mentoring-record-' + r.reg);
+};
+document.getElementById('btnSaveDoc').onclick = function(){
+  var r = allStudents()[view.idx];
+  if(!r) return;
+  var rows = document.querySelectorAll('#detailBody tr[data-meet]');
+  for(var i=0;i<rows.length;i++){
+    var tr = rows[i];
+    var idx = parseInt(tr.getAttribute('data-meet'), 10);
+    var cells = tr.querySelectorAll('[data-f]');
+    for(var c=0;c<cells.length;c++){
+      var f = cells[c].getAttribute('data-f');
+      var val = cells[c].innerText.replace(/\u00a0/g,' ');
+      if(idx === -1){
+        if(!r.newRow) r.newRow = { no: meetCount(r)+1, date:new Date().toISOString(), discussions:'', suggestions:'', response:'', studentSign:'', mentorSign:'', manual:true };
+        r.newRow[f] = (f === 'date') ? cells[c].getAttribute('data-date') || r.newRow.date : val;
+      } else if(r.meetings[idx]){
+        r.meetings[idx][f] = (f === 'date') ? cells[c].getAttribute('data-date') || r.meetings[idx].date : val;
+      }
+    }
+  }
+  if(r.newRow && (r.newRow.discussions || r.newRow.suggestions || r.newRow.response)){
+    r.meetings.push(r.newRow); r.newRow = null;
+  }
+  putStudent(r);
+  toast('Saved to the record.');
+  renderDetail();
+};
+document.getElementById('btnAddMeeting').onclick = function(){
+  var tr = document.createElement('tr');
+  tr.setAttribute('data-meet','-1');
+  tr.innerHTML = '<td contenteditable="true" data-f="no" style="text-align:center">' + (meetCount(allStudents()[view.idx]) + 1) + '</td>' +
+    '<td contenteditable="true" data-f="date" data-date="' + new Date().toISOString() + '">' + fmtDay(new Date().toISOString()) + '</td>' +
+    '<td contenteditable="true" data-f="discussions">&nbsp;</td>' +
+    '<td contenteditable="true" data-f="suggestions">&nbsp;</td>' +
+    '<td contenteditable="true" data-f="response">&nbsp;</td>' +
+    '<td contenteditable="true" data-f="studentSign">&nbsp;</td>' +
+    '<td contenteditable="true" data-f="mentorSign">&nbsp;</td>';
+  var tbody = document.querySelector('#detailBody table.rec tbody');
+  if(tbody){ tbody.appendChild(tr); tr.scrollIntoView({block:'nearest'}); toast('Row added — type into it, then Save changes.'); }
+  else toast('Open a student record first.');
+};
+
+/* ------------------------- 7. RECORD DOCUMENT ------------------------- */
+function openStudent(reg){
+  var list = allStudents(), i = findIdx(list, reg);
+  if(i < 0){ toast('Student not found'); return; }
+  view.idx = i;
+  showScreen('sc-detail');
+  renderDetail();
+}
+function renderDetail(){
+  var rec = allStudents()[view.idx];
+  if(!rec){ showScreen('sc-mentor'); return; }
+  var a = latestAnswersOf(rec);
+  var flags = computeFlags(a);
+  var rep = buildReport(a, rec.name);
+  var meetings = rec.meetings || [];
+
+  var h = '<div class="doc">';
+  h += '<div class="doc-title">MENTORING RECORD</div>';
+  h += '<div class="doc-sub">' + esc(BRANCH) + ' · student–mentor scheme · generated ' + fmtDay(new Date().toISOString()) + '</div>';
+  h += '<table class="meta"><tr>' +
+       '<td class="k">Name</td><td>' + esc(titleCase(rec.name)) + '</td>' +
+       '<td class="k">Register No.</td><td>' + esc(rec.reg) + '</td>' +
+       '<td class="k">Semester</td><td>' + esc(rec.sem || '') + '</td></tr>' +
+       '<tr><td class="k">Branch</td><td>' + esc(rec.branch || BRANCH) + '</td>' +
+       '<td class="k">Mentor</td><td>' + esc(MENTOR.name || '') + '</td>' +
+       '<td class="k">Meetings held</td><td>' + meetings.length + '</td></tr></table>';
+
+  h += '<table class="rec"><thead>' +
+    '<tr><th rowspan="2" style="width:60px">Meeting No</th><th rowspan="2" style="width:90px">Date</th>' +
+    '<th rowspan="2">Discussions</th><th rowspan="2">Mentor Suggestions</th><th rowspan="2">Student response</th>' +
+    '<th colspan="2">Signature</th></tr>' +
+    '<tr><th style="width:80px">Student</th><th style="width:80px">Mentor</th></tr></thead><tbody>';
+  if(!meetings.length){
+    h += '<tr><td style="text-align:center">1</td><td>' + fmtDay(new Date().toISOString()) + '</td>' +
+      '<td colspan="5" class="muted"><i>No mentoring session recorded yet. The chat answers will appear here automatically once the student completes a session — or click "+ Add meeting row" to write one by hand.</i></td></tr>';
+  }
+  meetings.forEach(function(m, idx){
+    h += '<tr data-meet="' + idx + '">' +
+      '<td contenteditable="true" data-f="no" style="text-align:center">' + esc(m.no || idx+1) + '</td>' +
+      '<td contenteditable="true" data-f="date" data-date="' + esc(m.date) + '">' + esc(fmtDay(m.date)) + '</td>' +
+      '<td contenteditable="true" data-f="discussions">' + esc(m.discussions).replace(/\n/g,'<br>') + '</td>' +
+      '<td contenteditable="true" data-f="suggestions">' + esc(m.suggestions).replace(/\n/g,'<br>') + '</td>' +
+      '<td contenteditable="true" data-f="response">' + esc(m.response).replace(/\n/g,'<br>') + '</td>' +
+      '<td contenteditable="true" data-f="studentSign">' + esc(m.studentSign || '\u00a0') + '</td>' +
+      '<td contenteditable="true" data-f="mentorSign">' + esc(m.mentorSign || '\u00a0') + '</td></tr>';
+  });
+  h += '</tbody></table>';
+
+  h += '<div class="flagrow"><b style="font-size:12.6px;color:#4b4680">ATTENTION / FOLLOW-UP:</b> ' +
+    (flags.length ? flags.map(function(f){ return '<span class="tag ' + f.level + '">' + esc(f.text) + '</span>'; }).join('') : '<span class="tag ok">Nothing flagged</span>') +
+    ' &nbsp; <span class="tag pri">Overall: ' + flagLabelShort(flags) + '</span></div>';
+
+  if(rep.suggestions.length){
+    h += '<div style="margin-top:16px"><h3>Mentor follow-up actions</h3>' +
+      rep.suggestions.map(function(s){ return '<div class="reportline">• ' + esc(s) + '</div>'; }).join('') + '</div>';
+  }
+
+  h += '<details class="rawqa" open><summary>Student profile summary (auto-generated from the chat)</summary>' +
+    '<div style="margin-top:10px">' + (rep.paragraphs.length ? rep.paragraphs.map(function(p){ return '<p style="font-size:13.7px">' + esc(p) + '</p>'; }).join('') : '<p class="muted">No session data yet.</p>') +
+    '</div></details>';
+
+  /* full Q&A of the latest session */
+  var last = meetings.length ? meetings[meetings.length-1] : null;
+  if(last && last.order){
+    h += '<details class="rawqa"><summary>Full responses from the latest session (' + askedCount(last.answers||{}) + ' answers)</summary><div style="margin-top:10px">';
+    var bysec = {};
+    last.order.forEach(function(id){
+      var s = stepById(id); if(!s) return;
+      if(!bysec[s.sec]) bysec[s.sec] = [];
+      bysec[s.sec].push(s);
+    });
+    Object.keys(bysec).forEach(function(sec){
+      h += '<div style="margin:14px 0 8px;font-weight:800;font-size:12.6px;letter-spacing:.6px;text-transform:uppercase;color:' + (SEC_COLOR[sec]||'#6d5efc') + '">' + esc(sec) + '</div>';
+      bysec[sec].forEach(function(s){
+        var ans = last.answers[s.id];
+        var val = ans ? (ans.d || '') : '';
+        if(ans && s.type === 'date' && ans.v) val = fmtDay(ans.v);
+        h += '<div class="qa"><div class="qq">' + esc(cleanQ(s.q)) + '</div><div class="aa">' +
+          (val === '' || val === undefined ? '<span class="muted"><i>— skipped —</i></span>' : esc(val)) + '</div></div>';
+      });
+    });
+    h += '</div></details>';
+  }
+
+  /* private note */
+  h += '<div class="card" style="margin-top:16px;box-shadow:none;border-color:#ddd6fe"><h3>Private mentor note (not on the printed record)</h3>' +
+    '<textarea id="mnote" rows="3" placeholder="What you discussed, what you promised, next steps…">' + esc(rec.note || '') + '</textarea>' +
+    '<div class="row" style="margin-top:10px"><button class="btn sm" id="saveNote">Save note</button>' +
+    '<label class="row" style="margin:0;font-size:13px;font-weight:700"><input type="checkbox" id="revd" style="width:auto"' + (rec.reviewed ? ' checked' : '') + '> mark reviewed</label></div></div>';
+
+  h += '</div>';
+  document.getElementById('detailBody').innerHTML = h;
+  document.getElementById('saveNote').onclick = function(){
+    var l = allStudents(); l[view.idx].note = document.getElementById('mnote').value; saveStudents(l); toast('Note saved');
+  };
+  document.getElementById('revd').onchange = function(){
+    var l = allStudents(); l[view.idx].reviewed = this.checked; saveStudents(l);
+  };
+}
+function flagLabelShort(f){
+  var m = 0; (f||[]).forEach(function(x){ m = Math.max(m, LVL[x.level]||0); });
+  return m === 3 ? 'High' : m === 2 ? 'Medium' : m === 1 ? 'Low' : 'Clear';
+}
+function flagLabel(f){ return flagLabelShort(f); }
+
+/* ------------------------- 9. EXCEL EXPORT (single file, record format) ------------------------- */
+function cell(v, style, merge){
+  var t = (typeof v === 'number') ? 'Number' : 'String';
+  return '<Cell' + (style ? ' ss:StyleID="' + style + '"' : '') + (merge ? ' ss:MergeAcross="' + merge + '"' : '') +
+    '><Data ss:Type="' + t + '">' + esc(v === undefined || v === null ? '' : v) + '</Data></Cell>';
+}
+function sheetName(r){
+  var n = 'M' + String(r.reg).replace(/[^0-9]/g,'') + ' ' + titleCase(r.name);
+  n = n.replace(/[\\\/\?\*\[\]:]/g,' ');
+  return n.slice(0,31);
+}
+function studentSheet(rec){
+  var a = latestAnswersOf(rec);
+  var flags = computeFlags(a);
+  var meetings = rec.meetings || [];
+  var x = '<Worksheet ss:Name="' + esc(sheetName(rec)) + '"><Table ss:DefaultRowHeight="15">';
+  x += '<Column ss:Width="55"/><Column ss:Width="85"/><Column ss:Width="300"/><Column ss:Width="300"/>' +
+       '<Column ss:Width="260"/><Column ss:Width="75"/><Column ss:Width="75"/>';
+  /* title */
+  x += '<Row ss:Height="26">' + cell('MENTORING RECORD', 'title', 6) + '</Row>';
+  x += '<Row>' + cell(BRANCH + '  ·  Student–Mentor Scheme', 'subt', 6) + '</Row>';
+  x += '<Row></Row>';
+  x += '<Row>' + cell('Name','k') + cell(titleCase(rec.name),'c') + cell('Register No.','k') + cell(rec.reg,'c') +
+       cell('Semester','k') + cell(rec.sem || '','c') + '</Row>';
+  x += '<Row>' + cell('Branch','k') + cell(rec.branch || BRANCH,'c') + cell('Mentor','k') + cell(MENTOR.name || '','c') +
+       cell('Meetings held','k') + cell(meetings.length,'c') + '</Row>';
+  x += '<Row></Row>';
+  /* table header, matching the register format */
+  x += '<Row ss:Height="30">' +
+    cell('Meeting No','hdr') + cell('Date','hdr') + cell('Discussions','hdr') + cell('Mentor Suggestions','hdr') +
+    cell('Student response','hdr') + cell('Signature','hdr',1) + '</Row>';
+  x += '<Row ss:Height="18">' + cell('','hdr') + cell('','hdr') + cell('','hdr') + cell('','hdr') + cell('','hdr') +
+    cell('Student','hdr') + cell('Mentor','hdr') + '</Row>';
+  if(!meetings.length){
+    x += '<Row ss:Height="60">' + cell(1) + cell('') +
+      cell('No session recorded yet.','cell') + cell('') + cell('') + cell('') + cell('') + '</Row>';
+  }
+  meetings.forEach(function(m, idx){
+    x += '<Row ss:Height="120">' +
+      cell(m.no || idx+1) + cell(fmtDay(m.date)) + cell(m.discussions || '') + cell(m.suggestions || '') +
+      cell(m.response || '') + cell(m.studentSign || '') + cell(m.mentorSign || '') + '</Row>';
+  });
+  x += '<Row></Row>';
+  x += '<Row>' + cell('ATTENTION / FOLLOW-UP', 'k', 1) + cell(flags.length ? flags.map(function(f){ return '[' + f.level.toUpperCase() + '] ' + f.text; }).join('; ') : 'Nothing flagged', 'cell', 4) + '</Row>';
+  x += '<Row>' + cell('Mentor note (private)', 'k', 1) + cell(rec.note || '', 'cell', 4) + '</Row>';
+  x += '<Row></Row>';
+  x += '<Row>' + cell('STUDENT PROFILE SUMMARY (auto-generated from the mentoring chat)', 'hdr', 6) + '</Row>';
+  var rep = buildReport(a, rec.name);
+  (rep.paragraphs.length ? rep.paragraphs : ['No session data yet.']).forEach(function(p){
+    x += '<Row ss:Height="44">' + cell(p, 'cell', 6) + '</Row>';
+  });
+  x += '<Row></Row>';
+  x += '<Row>' + cell('MENTOR FOLLOW-UP ACTIONS', 'hdr', 6) + '</Row>';
+  rep.suggestions.forEach(function(s, i){ x += '<Row ss:Height="30">' + cell((i+1) + '. ' + s, 'cell', 6) + '</Row>'; });
+  x += '<Row></Row>';
+
+  /* full responses */
+  if(meetings.length){
+    var last = meetings[meetings.length-1];
+    x += '<Row>' + cell('ALL RESPONSES — SESSION ON ' + fmtDay(last.date), 'hdr', 6) + '</Row>';
+    x += '<Row>' + cell('Section','hdr',1) + cell('Question','hdr',2) + cell('Student\u2019s answer','hdr',3) + '</Row>';
+    (last.order || []).forEach(function(id){
+      var s = stepById(id); if(!s) return;
+      var ans = last.answers ? last.answers[id] : null;
+      var val = ans ? (ans.d || '') : '';
+      if(ans && s.type === 'date' && ans.v) val = fmtDay(ans.v);
+      x += '<Row ss:Height="30">' + cell(s.sec,'cell',1) + cell(cleanQ(s.q),'cell',2) + cell(val === '' ? '— skipped —' : val,'cell',3) + '</Row>';
+    });
+  } else {
+    x += '<Row>' + cell('No responses recorded yet.', 'cell', 6) + '</Row>';
+  }
+  x += '</Table></Worksheet>';
+  return x;
+}
+function buildWorkbook(records, isSingle){
+  var isSingleStudent = isSingle || (records.length === 1);
+  var recTitle = isSingleStudent ? ('Mentoring Record - ' + records[0].reg + ' ' + titleCase(records[0].name)) : 'Mentoring Records (All Students)';
+  var x = '<?xml version="1.0"?>\n<?mso-application progid="Excel.Sheet"?>\n' +
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+    'xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
+    '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office"><Title>' + esc(recTitle) + '</Title>' +
+    '<Author>' + esc(MENTOR.name || 'Mentor') + '</Author></DocumentProperties>' +
+    '<Styles>' +
+      '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Top" ss:WrapText="1"/>' +
+        '<Font ss:FontName="Calibri" ss:Size="10"/></Style>' +
+      '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="14" ss:Color="#3B3670"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>' +
+      '<Style ss:ID="subt"><Font ss:Size="9" ss:Color="#6B7280"/><Alignment ss:Horizontal="Center"/></Style>' +
+      '<Style ss:ID="hdr"><Font ss:Bold="1" ss:Size="9.5" ss:Color="#FFFFFF"/><Interior ss:Color="#6D5EFC" ss:Pattern="Solid"/>' +
+        '<Alignment ss:WrapText="1" ss:Horizontal="Center" ss:Vertical="Center"/><Borders>' +
+        '<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>' +
+        '<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/></Borders></Style>' +
+      '<Style ss:ID="k"><Font ss:Bold="1" ss:Size="10"/><Interior ss:Color="#F3F4FF" ss:Pattern="Solid"/>' +
+        '<Alignment ss:WrapText="1" ss:Vertical="Top"/><Borders>' +
+        '<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/>' +
+        '<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/>' +
+        '<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/>' +
+        '<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/></Borders></Style>' +
+      '<Style ss:ID="c"><Alignment ss:WrapText="1" ss:Vertical="Top"/><Borders>' +
+        '<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/>' +
+        '<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/>' +
+        '<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/>' +
+        '<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/></Borders></Style>' +
+      '<Style ss:ID="cell"><Alignment ss:WrapText="1" ss:Vertical="Top"/><Borders>' +
+        '<Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/>' +
+        '<Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/>' +
+        '<Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/>' +
+        '<Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B9B6D9"/></Borders></Style>' +
+    '</Styles>';
+
+  /* If exporting all students, include Class Summary sheet first */
+  if(!isSingleStudent){
+    var list = allStudents();
+    x += '<Worksheet ss:Name="Class Summary"><Table ss:DefaultRowHeight="15">' +
+      '<Column ss:Width="45"/><Column ss:Width="95"/><Column ss:Width="230"/><Column ss:Width="55"/><Column ss:Width="85"/>' +
+      '<Column ss:Width="55"/><Column ss:Width="75"/><Column ss:Width="80"/><Column ss:Width="330"/>' +
+      '<Row ss:Height="24">' + cell('MENTORING — CLASS SUMMARY', 'title', 8) + '</Row>' +
+      '<Row>' + cell(BRANCH + '   ·   Mentor: ' + (MENTOR.name || '—') + '   ·   generated ' + fmtDay(new Date().toISOString()), 'subt', 8) + '</Row>' +
+      '<Row></Row>' +
+      '<Row ss:Height="30">' + cell('Sl','hdr') + cell('Register No.','hdr') + cell('Name','hdr') + cell('Sem','hdr') +
+        cell('Status','hdr') + cell('Mtgs','hdr') + cell('Attend.','hdr') + cell('Attention','hdr') + cell('Key concerns / follow-up','hdr') + '</Row>';
+    list.forEach(function(r, i){
+      var a = latestAnswersOf(r);
+      var flags = computeFlags(a);
+      var top = flags.filter(function(f){ return f.level !== 'low'; }).slice(0,4).map(function(f){ return f.text; }).join('; ') || (flags.length ? flags.slice(0,2).map(function(f){ return f.text; }).join('; ') : 'Nothing flagged');
+      x += '<Row ss:Height="28">' + cell(i+1) + cell(r.reg) + cell(titleCase(r.name)) + cell(r.sem || '') +
+        cell(statusOf(r)) + cell(meetCount(r)) + cell(describe_(get(a,'attendance_pct'))) + cell(flagLabelShort(flags)) + cell(top,'cell') + '</Row>';
+    });
+    x += '</Table></Worksheet>';
+  }
+
+  /* One sheet per requested student (if 1 student, contains ONLY that student) */
+  records.forEach(function(r){ x += studentSheet(r); });
+
+  /* Legend */
+  x += '<Worksheet ss:Name="Legend"><Table><Column ss:Width="260"/><Column ss:Width="520"/>' +
+    '<Row>' + cell('How to read this file','hdr',1) + '</Row>' +
+    '<Row>' + cell('One sheet per student') + cell('Each sheet holds the Meeting No / Date / Discussions / Mentor Suggestions / Student response / Signature table, followed by the auto-generated profile summary and the student\u2019s full answers.') + '</Row>' +
+    '<Row>' + cell('Discussions') + cell('Auto-written from what the student said in the mentoring chat. You can edit it in the app (Record ▸ edit ▸ Save changes).') + '</Row>' +
+    '<Row>' + cell('Mentor Suggestions') + cell('Suggested follow-up actions generated from the student\u2019s answers — edit them to suit your judgement.') + '</Row>' +
+    '<Row>' + cell('Student response') + cell('The action plan the student committed to (problem, skill, step, support, date).') + '</Row>' +
+    '<Row>' + cell('Signature') + cell('Left blank — print the sheet and get it signed at the meeting.') + '</Row>' +
+    '<Row></Row>' + '<Row>' + cell('Question legend','hdr',1) + '</Row>' +
+    STEPS.map(function(s){ return '<Row>' + cell(s.sec) + cell(cleanQ(s.q)) + '</Row>'; }).join('') +
+    '</Table></Worksheet>';
+  x += '</Workbook>';
+  return x;
+}
+function describe_(v){ return v === undefined || v === null ? '' : String(v); }
+function download(filename, content, mime){
+  // Note: Inside an iframe with sandbox="allow-scripts", downloads via <a download>
+  // or window.open are blocked by browser security unless opened in a top-level tab.
+  try{
+    var blob = new Blob(['\ufeff' + content], { type:mime + ';charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename; a.target = '_blank';
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ try{ document.body.removeChild(a); URL.revokeObjectURL(url); }catch(err){} }, 3000);
+    return true;
+  }catch(e){ return false; }
+}
+function exportExcel(records, name){
+  records = (records || []).filter(function(r){ return r; });
+  if(!records.length){ toast('Nothing to export.'); return; }
+  var isSingle = (records.length === 1);
+  var xml = buildWorkbook(records, isSingle);
+  var fn = name + '-' + new Date().toISOString().slice(0,10) + '.xls';
+  var isPreview = false;
+  try{ isPreview = (window.self !== window.top); }catch(e){ isPreview = true; }
+
+  // Attempt the standard browser download
+  download(fn, xml, 'application/vnd.ms-excel');
+
+  // If in preview iframe, browser sandboxing silently blocks downloads,
+  // so immediately pop open the interactive modal with 1-click Copy / New Window options!
+  if(isPreview){
+    showRaw(xml, records.length, fn);
+  } else {
+    toast('Downloaded ' + fn + ' — ' + records.length + ' student sheet(s) in one file, in the meeting-register format.');
+  }
+}
+function showRaw(content, n, filename){
+  var fn = filename || ('mentoring-records-' + new Date().toISOString().slice(0,10) + '.xls');
+  var box = document.getElementById('modalBox');
+  box.innerHTML = '<h2 style="display:flex;align-items:center;gap:8px">📊 Excel Export (' + n + ' Student Sheets)</h2>' +
+    '<div class="note warn" style="margin:10px 0 14px;line-height:1.5">' +
+      '<b>Why downloads pause in this preview:</b> You are currently testing inside the platform\'s <i>sandboxed preview frame</i>. ' +
+      'Web browsers automatically block file downloads initiated inside sandboxed iframes for security.<br>' +
+      '<b>When opened directly on your computer:</b> Clicking the Excel button downloads <b>' + fn + '</b> immediately!</div>' +
+    '<div style="font-weight:700;font-size:13.5px;margin-bottom:6px">Quick Options right here in preview:</div>' +
+    '<div class="row" style="margin-bottom:12px">' +
+      '<button class="btn sm" id="copyRaw">📋 1-Click Copy Full Excel Data</button>' +
+      '<button class="btn teal sm" id="openBlob">🌐 Open in New Tab (Bypasses Sandbox)</button>' +
+      '<button class="btn grey sm" id="closeRaw">Close</button>' +
+    '</div>' +
+    '<p class="muted" style="font-size:12.3px;margin:8px 0 4px">Excel XML Spreadsheet Content (' + Math.round(content.length/1024) + ' KB):</p>' +
+    '<textarea class="raw" id="rawTxt" readonly></textarea>';
+
+  document.getElementById('rawTxt').value = content;
+
+  document.getElementById('copyRaw').onclick = function(){
+    var t = document.getElementById('rawTxt');
+    t.select();
+    try{
+      navigator.clipboard.writeText(content).then(function(){
+        toast('✓ Copied to clipboard! Paste it into a file named ' + fn + ' and open in Excel.');
+      }).catch(function(){
+        document.execCommand('copy');
+        toast('✓ Copied to clipboard!');
+      });
+    }catch(e){
+      document.execCommand('copy');
+      toast('✓ Copied to clipboard!');
+    }
+  };
+
+  document.getElementById('openBlob').onclick = function(){
+    try{
+      var b = new Blob(['\ufeff' + content], { type:'application/vnd.ms-excel;charset=utf-8' });
+      var u = URL.createObjectURL(b);
+      var w = window.open(u, '_blank');
+      if(!w){
+        toast('Popup was blocked by your browser. Please allow popups or use the Copy button.');
+      } else {
+        toast('Opened in new tab — press Ctrl+S to save as .xls!');
+      }
+    }catch(err){
+      toast('Could not open new tab: ' + err);
+    }
+  };
+
+  document.getElementById('closeRaw').onclick = function(){ document.getElementById('modal').classList.remove('on'); };
+  document.getElementById('modal').classList.add('on');
+}
+
+/* ------------------------- settings / backup / demo ------------------------- */
+document.getElementById('btnSettings').onclick = function(){
+  var box = document.getElementById('modalBox');
+  box.innerHTML = '<h2>Settings</h2>' +
+    '<label for="setName">Mentor name (appears on records)</label><input type="text" id="setName" value="' + esc(MENTOR.name) + '">' +
+    '<label for="setPass">Change mentor password</label><input type="password" id="setPass" placeholder="new password (leave blank to keep)">' +
+    '<label for="setPass2">Confirm new password</label><input type="password" id="setPass2" placeholder="repeat">' +
+    '<div id="setMsg" style="margin-top:12px"></div>' +
+    '<div class="row" style="margin-top:14px"><button class="btn sm" id="saveSet">Save</button>' +
+    '<button class="btn grey sm" id="closeSet">Close</button>' +
+    '<button class="btn grey sm" id="wipe" style="margin-left:auto;color:#dc2626">Erase ALL student data</button></div>' +
+    '<p class="muted" style="margin-top:14px">Storage: ' + (HAS_LS ? 'saved in this browser (localStorage)' : 'preview mode — nothing is saved after you close this tab') +
+    '. Use Backup / Restore to move records to another computer.</p>';
+  document.getElementById('modal').classList.add('on');
+  document.getElementById('saveSet').onclick = function(){
+    var n = document.getElementById('setName').value.trim();
+    var p1 = document.getElementById('setPass').value, p2 = document.getElementById('setPass2').value;
+    var msg = document.getElementById('setMsg');
+    if(p1 || p2){
+      if(p1.length < 4){ msg.innerHTML = '<div class="note bad">Password needs at least 4 characters.</div>'; return; }
+      if(p1 !== p2){ msg.innerHTML = '<div class="note bad">Passwords do not match.</div>'; return; }
+      store.set(K_PASS, p1);
+    }
+    store.set(K_MENTOR, n); MENTOR.name = n;
+    document.getElementById('modal').classList.remove('on');
+    toast('Settings saved');
+    renderDashboard();
+  };
+  document.getElementById('closeSet').onclick = function(){ document.getElementById('modal').classList.remove('on'); };
+  document.getElementById('wipe').onclick = function(){
+    if(!confirm('Erase ALL student session data (the class list stays)?')) return;
+    var l = allStudents();
+    l.forEach(function(r){ r.meetings = []; r.draft = null; r.note = ''; });
+    saveStudents(l);
+    document.getElementById('modal').classList.remove('on');
+    renderDashboard(); toast('Student session data erased');
+  };
+};
+document.getElementById('btnBackup').onclick = function(){
+  var data = { exportedAt:new Date().toISOString(), mentor:MENTOR.name, students:allStudents() };
+  if(download('mentoring-backup-' + new Date().toISOString().slice(0,10) + '.json', JSON.stringify(data, null, 1), 'application/json')) toast('Backup downloaded');
+  else toast('Download blocked in this preview — use the downloaded HTML file.');
+};
+document.getElementById('btnRestore').onclick = function(){
+  var box = document.getElementById('modalBox');
+  box.innerHTML = '<h2>Restore from backup</h2><p class="muted">Paste the JSON backup here.</p>' +
+    '<textarea class="raw" id="rstTxt" placeholder="{ ... }"></textarea>' +
+    '<div class="row" style="margin-top:12px"><button class="btn sm" id="doRst">Restore</button>' +
+    '<button class="btn grey sm" id="closeRst">Close</button></div>';
+  document.getElementById('modal').classList.add('on');
+  document.getElementById('doRst').onclick = function(){
+    try{
+      var data = JSON.parse(document.getElementById('rstTxt').value);
+      var incoming = data.students || data;
+      if(!Array.isArray(incoming)) throw new Error('bad');
+      var list = allStudents();
+      incoming.forEach(function(r){
+        var i = findIdx(list, r.reg);
+        if(i >= 0) list[i] = r; else list.push(r);
+      });
+      saveStudents(list);
+      if(data.mentor) store.set(K_MENTOR, data.mentor);
+      loadMentor();
+      document.getElementById('modal').classList.remove('on');
+      renderDashboard(); toast('Restored ' + incoming.length + ' record(s)');
+    }catch(e){ toast('Could not read that JSON'); }
+  };
+  document.getElementById('closeRst').onclick = function(){ document.getElementById('modal').classList.remove('on'); };
+};
+
+/* demo sessions for three students */
+var DEMO = {
+  'NCE24AM001':{ 'family_work':'Father is a farmer, mother looks after the house and does tailoring work.',
+    'siblings':'One elder sister doing B.Com, a younger brother in class 9.',
+    'family_atmosphere':'Supportive, though everyone is busy','home_support':3,
+    'feel':3,'feel_note':'I feel like I am behind my friends in maths.','classroom':'Mostly comfortable',
+    'bother':'Yes, a little','bother_note':'I sleep late and miss the morning classes.','adjust':'A little adjusting',
+    'adjust_areas':['Hostel & food','Travelling / commute'],'teachers':'Sometimes','teachers_why':['Shyness','English / language'],
+    'hard_subjects':['Mathematics','Programming & lab'],'hard_reason':['Basics are not clear','I missed classes'],
+    'enjoy':'DBMS — I like designing tables and understanding how data fits together.','prep_exams':['Mostly in the last 2–3 days','YouTube / online videos'],
+    'understand':'Once in a while','understand_help':'Yes','revise':'Only before exams','study_time':'1–2 hours',
+    'assignments':'Mostly on time','academic_support':'Yes','academic_support_what':'Maths II — about half an hour of doubts after class',
+    'target':'CGPA above 8.5 and no back papers','attendance_pct':'65–75%','absence_reasons':['Transport / college bus','Oversleeping'],
+    'attendance_concerns':'Yes — I may fall short of 75%','attendance_help':'Yes',
+    'improve_regularity':'Sleep by 11 and take the 8 o\u2019clock bus.','study_place':['Hostel room','Library'],
+    'study_method':'Writing short summaries and solving problems','notes':'Sometimes',
+    'online_resources':['YouTube','GeeksforGeeks / W3Schools','ChatGPT & AI tools'],
+    'time_manage':'Mostly after dinner and on Sundays before tests.','distractions':['Phone / social media','Sleep and tiredness'],
+    'study_plan':'No','plan_help':'Yes','prog_comfort':2,'languages':['C','Python','SQL'],
+    'prog_rating':'I can write small programs','projects':'A student mark calculator in C and a small quiz game in Python.',
+    'interest_areas':['AI / Machine learning','Web development'],'events':['Workshops'],'portfolio':'No','portfolio_help':'Yes',
+    'skill_next':'Python for data analysis','after_grad':'A job through campus placement','career_role':'Data analyst in a product company',
+    'skills_needed':'Python, SQL, statistics and communication','prep_now':['Online courses','Aptitude practice'],
+    'career_concerns':'I am afraid of interviews in English.','placement_started':'Just started',
+    'placement_grid':{'Aptitude & reasoning':3,'Coding / interview questions':2,'Communication & English':2},
+    'resume':'No, not yet','resume_help':'Yes','mock_interviews':'No, never','mock_help':'Yes',
+    'placement_help':['Aptitude training','Coding & DSA practice','Resume building','Spoken English'],
+    'english_comfort':2,'soft_grid':{'Giving presentations':2,'Asking questions in class':3,'Speaking in group discussions':2},
+    'soft_skill':['English fluency','Confidence'],'strength':'I never give up once I decide something.',
+    'improve_area':'Consistency — I start well and then stop.','motivation':'My parents and the wish to get a good job.',
+    'demotivators':['Low marks','Comparing myself with others'],'stress_scale':2,
+    'stress_ways':['Keep it to myself','Sleep it off'],'stress_support':'Yes',
+    'time_balance':'Classes till 4, hostel by 5, study between 8.30 and 10.','habit_change':'Late-night phone use.',
+    'mentor_support':['Academic guidance','Help in a specific subject','Career & placement advice','Regular check-ins'],
+    'meet_frequency':'Once in two weeks','diff_to_discuss':'I find it hard to tell a teacher I did not understand something.',
+    'college_issue':'The library closes at 5 pm — that is when I actually want to study.',
+    'help_me':'Please check on my maths every two weeks.',
+    'plan_problem':'I am weak in Maths II and have not opened the textbook in three weeks.',
+    'plan_skill':'Two DSA problems every day.','plan_action':'Finish units 1 and 2 of Maths II and DBMS, and clear my pending record.',
+    'plan_support':'A 15-minute doubt session each week, and a senior to guide me in DSA.','plan_when':'2026-10-15' },
+  'NCE24AM021':{ 'family_work':'Both parents are teachers.','siblings':'One younger brother in class 10.',
+    'family_atmosphere':'Really supportive','home_support':5,'feel':5,'classroom':'Yes, quite comfortable',
+    'bother':'No, nothing much','adjust':'Settled in well','teachers':'Yes, always',
+    'hard_subjects':['Digital electronics'],'hard_reason':['Class moves too fast'],
+    'enjoy':'Programming and AI — I build small projects on weekends.','prep_exams':['I revise regularly anyway','Previous question papers'],
+    'understand':'Almost always','revise':'Regularly every week','study_time':'3–4 hours','assignments':'All done on time',
+    'target':'CGPA 9 plus and a good internship','attendance_pct':'Above 85%','attendance_concerns':'Not really',
+    'improve_regularity':'Keep the same routine and help friends who are lagging.','study_place':['Library','Home'],
+    'study_method':'I teach the topic to a friend after class — if I can explain it, I know it.','notes':'Yes, regularly',
+    'online_resources':['NPTEL / SWAYAM','ChatGPT & AI tools'],'time_manage':'Fixed morning slots before class.',
+    'distractions':['Nothing much, I stay focused'],'study_plan':'Yes','prog_comfort':4,
+    'languages':['Python','Java','SQL','Git / GitHub'],'prog_rating':'I can build a working project',
+    'projects':'A college event website and a movie recommendation mini project.','interest_areas':['AI / Machine learning','Cloud computing'],
+    'events':['Hackathons','Internships','Coding contests'],'portfolio':'Yes, and I keep it updated',
+    'skill_next':'Cloud (AWS/Azure) and system design basics','after_grad':'A job through campus placement',
+    'career_role':'ML engineer in a product company','skills_needed':'DSA, ML, cloud and communication',
+    'prep_now':['Coding practice','Building projects'],'placement_started':'Going at it seriously',
+    'placement_grid':{'Aptitude & reasoning':4,'Coding / interview questions':4,'Communication & English':4},
+    'resume':'Yes, up to date','mock_interviews':'Yes, a few','placement_help':['Coding & DSA practice'],
+    'english_comfort':4,'soft_grid':{'Giving presentations':4,'Asking questions in class':5,'Speaking in group discussions':4},
+    'soft_skill':['Leadership','Writing'],'strength':'I plan things and stick to the plan.',
+    'improve_area':'I take on too many things at once.','motivation':'Solving real problems and winning hackathons.',
+    'demotivators':['Boredom'],'stress_scale':4,'stress_ways':['Exercise or play','Make a plan and work harder'],
+    'time_balance':'Morning study, evening project work, sports twice a week.','habit_change':'Skipping breakfast.',
+    'mentor_support':['Career & placement advice','Introduction to seniors & alumni'],'meet_frequency':'Once a month',
+    'college_issue':'We need more open-source club activity on campus.','help_me':'Please refer me to an alumna working in ML.',
+    'plan_problem':'Digital electronics — my quiz scores are low.','plan_skill':'System design fundamentals.',
+    'plan_action':'Finish two NPTEL modules and complete 50 DSA problems.','plan_support':'An alumni referral for ML internships.',
+    'plan_when':'2026-10-30' },
+  'NCE24AM054':{ 'family_work':'Father works in the Gulf, mother is a homemaker.',
+    'siblings':'Two younger sisters, both in school.','family_atmosphere':'Stressful at times','home_support':2,
+    'family_stress':'My father is unwell and there are money problems at home; I keep thinking about it during class.',
+    'financial':'We may not be able to pay the hostel fee next month. Is there any scholarship I can apply for?',
+    'feel':2,'feel_note':'I cannot concentrate and I feel tired all the time.','classroom':'Sometimes I feel left out',
+    'bother':'Yes, quite a lot','bother_note':'Tension at home.','adjust':'A lot of adjusting',
+    'adjust_areas':['Being away from home','Money','Health & sleep'],'teachers':'I avoid it',
+    'teachers_why':['Shyness','Not sure whom to ask'],'hard_subjects':['Mathematics','Digital electronics'],
+    'hard_reason':['I missed classes','No good notes'],'prep_exams':['Honestly, I do not prepare much'],
+    'understand':'Rarely','understand_help':'Yes','revise':'Almost never','study_time':'Less than an hour',
+    'assignments':'Usually pending','assignments_why':['Work at home','Health'],'academic_support':'Yes',
+    'academic_support_what':'Maths and DE — I have missed a lot of classes.','attendance_pct':'Below 50%',
+    'absence_reasons':['Health','Things at home'],'attendance_concerns':'Yes — I may fall short of 75%','attendance_help':'Yes',
+    'distractions':['Phone / social media','Sleep and tiredness'],'study_plan':'No','plan_help':'Yes',
+    'prog_comfort':1,'languages':['C','Nothing yet'],'prog_rating':'Still learning the basics','projects':'none',
+    'interest_areas':['Not sure yet'],'events':['Not yet'],'portfolio':'I do not know what GitHub is','portfolio_help':'Yes',
+    'skill_next':'Aptitude & reasoning','after_grad':'Not decided yet','skills_needed':'I am not sure yet.',
+    'prep_now':['Nothing yet'],'career_concerns':'I worry that I will not get any job.','placement_started':'Not started yet',
+    'resume':'No, not yet','resume_help':'Yes','mock_interviews':'No, never','mock_help':'Yes',
+    'placement_help':['Aptitude training','Spoken English'],'english_comfort':1,
+    'soft_grid':{'Giving presentations':1,'Asking questions in class':2,'Speaking in group discussions':1},
+    'soft_skill':['Confidence','English fluency'],'strength':'I look after my family and I am patient.',
+    'improve_area':'My confidence and my sleep.','motivation':'My mother wants me to finish my degree.',
+    'demotivators':['Family pressure','Money worries','Low marks'],'stress_scale':1,
+    'stress_ways':['Keep it to myself','Get anxious','Blame myself'],'stress_support':'Yes',
+    'time_balance':'I help at home in the evenings, so studying happens very late.','habit_change':'Sleeping at 2 am and skipping breakfast.',
+    'mentor_support':['Someone to talk to','Help with scholarships or fees','Academic guidance'],'meet_frequency':'Every week',
+    'diff_to_discuss':'Everything feels like a burden to say out loud.',
+    'help_me':'Please help me with the hostel fee and with maths.',
+    'plan_problem':'I have missed so many classes that I do not know where to start.',
+    'plan_skill':'Attend every class for one full week and sleep by 11 pm.',
+    'plan_action':'Meet the class advisor about attendance and collect the notes for the units I missed.',
+    'plan_support':'Help with the scholarship form and a weekly maths doubt session.','plan_when':'2026-10-10' }
+};
+function autofill(profile){
+  var answers = {}, order = [], mode = 'full', guard = 0, s;
+  while((s = nextStep(answers, mode)) && guard++ < 300){
+    var v;
+    if(Object.prototype.hasOwnProperty.call(profile, s.id)) v = profile[s.id];
+    else if(s.type === 'scale') v = 3;
+    else if(s.type === 'choice') v = s.opts[1] || s.opts[0];
+    else if(s.type === 'yesno') v = 'No';
+    else if(s.type === 'multi') v = [s.opts[0]];
+    else if(s.type === 'grid'){ v = {}; s.items.forEach(function(it){ v[it] = 3; }); }
+    else if(s.type === 'date') v = '2026-10-20';
+    else v = 'Will think about it and tell you.';
+    answers[s.id] = { v:v, d:displayOf(s, v), t:new Date().toISOString() };
+    order.push(s.id);
+  }
+  return { answers:answers, order:order };
+}
+function loadDemo(){
+  seedRoster();
+  Object.keys(DEMO).forEach(function(reg, k){
+    var r = getStudent(reg); if(!r) return;
+    var built = autofill(DEMO[reg]);
+    r.meetings = [{
+      no:1, date:new Date().toISOString(), discussions: reportText(built.answers, r.name) + '\n\n[Attention flags: ' +
+        (computeFlags(built.answers).map(function(f){ return f.level.toUpperCase() + ' - ' + f.text; }).join('; ') || 'none') + ']',
+      suggestions: suggestionText(built.answers, r.name), response: studentResponseText(built.answers),
+      studentSign:'', mentorSign:'', sessionMode:'full', answers:built.answers, order:built.order, auto:true
+    }];
+    r.sem = 'S5';
+    putStudent(r);
+  });
+  toast('Three sample sessions added (NCE24AM001, NCE24AM021, NCE24AM054). Explore their records.');
+}
+/* expose demo loader inside settings for convenience */
+document.addEventListener('keydown', function(e){
+  if(e.altKey && e.key.toLowerCase() === 'd'){ loadDemo(); renderDashboard(); }
+});
+
+/* ------------------------- boot ------------------------- */
+(function boot(){
+  fillRosterUI();
+  seedRoster();
+  loadMentor();
+  if(!HAS_LS){
+    document.getElementById('storeWarn').innerHTML = '<div class="note warn" style="margin-top:8px"><b>Preview note:</b> preview frames block browser storage, so ' +
+      'records typed here stay only in memory and downloads may be blocked. Download this HTML file and open it in Chrome/Edge/Firefox for full saving and export — ' +
+      'the app previews fine here for checking the chat and the record sheet.</div>';
+  }
+  if(/[\?&]mentor=1/.test(location.search)){ document.getElementById('roleSel').value = 'mentor'; setRole('mentor'); }
+  if(/[\?&]demo=1/.test(location.search)){ loadDemo(); }
+  var sess = store.get(K_SESS, null);
+  if(sess && getStudent(sess)){ CUR.student = getStudent(sess); }
+})();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a41a40d298942b4a',t:'MTc5MDUwOTQzMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
