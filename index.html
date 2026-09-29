@@ -67,6 +67,10 @@
   .btn.grey{background:#f1f2fa;color:#3b4568;border:1.6px solid var(--line);box-shadow:none}
   .btn.sm{padding:8px 13px;font-size:13px;border-radius:11px}
   .btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;transform:none}
+  #cloudBadge{border:1.6px solid #cbd5e1;background:#f8fafc;color:#334155;font-weight:600}
+  #cloudBadge.on{border-color:#a7f3d0;background:#ecfdf5;color:#065f46}
+  #cloudBadge.wait{border-color:#fed7aa;background:#fff7ed;color:#9a3412}
+  #cloudBadge.off{border-color:#fecaca;background:#fef2f2;color:#991b1b}
   .note{border-radius:14px;padding:13px 15px;font-size:13.2px;background:#eef2ff;border:1.6px solid #c7d2fe;color:#3730a3}
   .note.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
   .note.bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
@@ -323,6 +327,7 @@
     <div>
       <h1 style="margin-bottom:2px">Mentor dashboard</h1>
       <p class="muted" id="mentorSub"></p>
+      <div class="row" style="margin-top:8px"><button class="btn sm" id="cloudBadge" style="cursor:pointer"></button></div>
     </div>
     <div class="row noprint">
       <button class="btn pink sm" id="btnSyncCloud">☁️ Google Sheets Sync</button>
@@ -544,10 +549,11 @@ var STEPS = [
   q:"Thank you for being honest about that — it isn't always easy to say. If you feel like it, tell me a little more about what's going on at home. Completely up to you.",
   placeholder:'Health, work, money, anything that sits on your mind while you study',
   optional:true, skipLabel:'Skip — not now',
-  flagText:'Home circumstances affecting studies' },
+  flagText:'Home circumstances affecting studies', adaptive:true,
+  when:function(a){ return get(a,'family_atmosphere') === 'Stressful at times' || (num(a,'home_support') !== null && num(a,'home_support') <= 2) || replyIsDifficult(get(a,'family_work') || ''); } },
 
 { id:'financial', sec:'Family & home', type:'text', sensitive:true,
-  q:'Is there anything about your money or personal situation you would like the college to know, so that we can help you? Fees, hostel, scholarship, health, a part-time job — anything at all.',
+  q:'Is there anything about your money or personal situation you would like the college to know, so your mentor can discuss possible support with you? Fees, hostel, scholarship, health, a part-time job — anything at all.',
   placeholder:'Write freely — or skip if you would rather not',
   optional:true, skipLabel:'Prefer not to say',
   flagText:'Financial / personal support needed' },
@@ -567,7 +573,8 @@ var STEPS = [
   q:'Thanks for telling me honestly. What is weighing on your mind the most right now?',
   placeholder:'Anything — studies, health, friends, home, money',
   optional:true, skipLabel:'Skip for now',
-  flagText:'Feeling low about studies / college life' },
+  flagText:'Feeling low about studies / college life', adaptive:true,
+  when:function(a){ return num(a,'feel') !== null && num(a,'feel') <= 2; } },
 
 { id:'classroom', sec:'How college is going', core:true, type:'choice',
   q:'Do you feel at home in your class — with your friends and classmates around you?',
@@ -610,7 +617,7 @@ var STEPS = [
   q:'Let\'s talk subjects 📚 Which ones are giving you a tough time this semester?',
   opts:SUBJ, allowOther:true },
 
-{ id:'hard_reason', sec:'Subjects & studies', type:'multi',
+{ id:'hard_reason', sec:'Subjects & studies', type:'multi', adaptive:true,
   q:'What do you think makes those subjects feel hard?',
   opts:['Basics are not clear','Not enough practice','Class moves too fast','I missed classes','I lose interest','Language barrier','No good notes','Weak in maths','I study only before exams'],
   allowOther:true,
@@ -654,7 +661,7 @@ var STEPS = [
   q:'Is there a subject where you would like some extra help right now?',
   flagText:'Additional academic support requested' },
 
-{ id:'academic_support_what', sec:'Subjects & studies', type:'text',
+{ id:'academic_support_what', sec:'Subjects & studies', type:'text', adaptive:true,
   q:'Which subject, and what would help most — classes, notes, practice sums, or a senior to explain?',
   placeholder:'e.g. Maths II — half an hour of doubts after class',
   when:function(a){ return get(a,'academic_support') === 'Yes'; } },
@@ -669,7 +676,7 @@ var STEPS = [
   q:'Roughly where does your attendance stand this semester?',
   opts:['Below 50%','50–65%','65–75%','75–85%','Above 85%'] },
 
-{ id:'absence_reasons', sec:'Attendance & routine', type:'multi',
+{ id:'absence_reasons', sec:'Attendance & routine', type:'multi', adaptive:true,
   q:'No judgement at all — what is usually behind the days you miss?',
   opts:['Nothing in particular','Transport / college bus','Health','Things at home','Job or work','Some classes feel pointless','Oversleeping','Fests or sports','Fees or paperwork'],
   allowOther:true,
@@ -899,7 +906,7 @@ var STEPS = [
   q:'What do you usually do when you are stressed?',
   opts:['Talk to friends or family','Make a plan and work harder','Exercise or play','Music / movies','Sleep it off','Prayer / meditation','Keep it to myself','Get anxious','Blame myself','Talk to a teacher'] },
 
-{ id:'stress_support', sec:'You, personally', type:'yesno', sensitive:true,
+{ id:'stress_support', sec:'You, personally', type:'yesno', sensitive:true, adaptive:true,
   q:"Thank you for telling me — that takes courage. Would you like to talk to me, or meet the college counsellor? It is completely confidential, and it genuinely helps.",
   optional:true, skipLabel:'Not right now',
   flagText:'Possible stress — counselling support offered',
@@ -962,111 +969,164 @@ var STEPS = [
   placeholder:'e.g. a 15-minute doubt session each week, or a senior to guide me' },
 
 { id:'plan_when', sec:'Our action plan', plan:true, type:'date',
-  q:'By when will you complete it? (Pick a date — I will check in with you.)',
+  q:'By when would you like to try this? (Pick a date and discuss it with your mentor.)',
   optional:true }
 ];
 
-/* warm acknowledgement before the next question */
-var ACK_STEP = {
-  family_work:"Lovely, thank you for that. 🙏",
-  siblings:"Good to know — family makes a real difference.",
-  family_atmosphere:"Thanks for saying that honestly.",
-  home_support:"Thank you — that helps me understand your situation.",
-  family_stress:"Thank you for trusting me with that. I've noted it for your mentor.",
-  financial:"Thank you for telling me. Your mentor will look into what support is possible — you won't be left alone with this.",
-  feel:"Thanks for being open about it.",
-  feel_note:"I'm glad you shared that. It matters.",
-  classroom:"Noted — that's good to know.",
-  bother:"Okay. Thank you for being straight with me.",
-  bother_note:"Thank you. We'll work on this together.",
-  adjust:"Thanks — the first year or two can be quite a shift.",
-  teachers:"Understood. Many students feel exactly the same.",
-  hard_subjects:"That's a useful list — very common ones, actually.",
-  hard_reason:"That helps me see where the real problem is.",
-  enjoy:"Nice! Interests like that are a great base to build on. 😊",
-  prep_exams:"Okay, got it.",
-  understand:"That's helpful to know.",
-  academic_support:"Noted — I'll flag that for extra help.",
-  target:"That's a good target to hold on to. 🎯",
-  attendance_pct:"Thank you for being honest — attendance is fixable, so don't worry.",
-  absence_reasons:"Thanks for telling me plainly. No judgement here at all.",
-  attendance_concerns:"Understood. Let's make sure this doesn't become a problem.",
-  attendance_help:"Good. We'll sort out a plan together — you're not alone in this.",
-  improve_regularity:"That's a practical thought. Let's build on it.",
-  study_place:"Got it.",
-  study_method:"That's a solid method.",
-  notes:"Noted.",
-  online_resources:"Good — self-learning counts for a lot.",
-  distractions:"Thanks for being honest — that's the first step to beating it. 💪",
-  study_plan:"Okay.",
-  plan_help:"Great, we'll make one that fits your real routine.",
-  prog_comfort:"Thanks for the honest answer — everyone starts somewhere.",
-  languages:"Good, that's a decent base.",
-  prog_rating:"Noted — that gives me a clear picture.",
-  projects:"Thanks for sharing that.",
-  interest_areas:"Nice choices! 🌟",
-  events:"Good to know your exposure so far.",
-  portfolio:"Okay — easy fix, we'll set one up.",
-  skill_next:"Excellent choice to aim at. 🚀",
-  after_grad:"That's a clear direction to work towards.",
-  career_role:"Noted — a specific goal helps a lot.",
-  skills_needed:"Good thinking.",
-  prep_now:"Thanks — that tells me where you are.",
-  career_concerns:"It's normal to feel that, and it's fixable.",
-  placement_started:"Okay, thanks for being honest.",
-  resume:"Noted.",
-  mock_interviews:"Fine — mock interviews are easy to arrange.",
-  placement_help:"Great, I'll line those up.",
-  english_comfort:"Thanks — many students feel like this, and it improves fast with practice.",
-  soft_grid:"Thanks, that's a useful picture.",
-  soft_skill:"Good choice to focus on.",
-  strength:"That's a real strength — remember it on the hard days. 🌟",
-  improve_area:"Thanks for being honest about that.",
-  motivation:"That's a lovely source of motivation.",
-  demotivators:"Thanks for trusting me with that.",
-  stress_scale:"Thank you for being honest — this is important for me to know.",
-  stress_ways:"That's more common than you'd think.",
-  stress_support:"Thank you. Sometimes just talking to someone changes a lot.",
-  time_balance:"Thanks — that's a realistic picture of your day.",
-  habit_change:"Good self-awareness. Small changes stick best.",
-  mentor_support:"Thank you — that's exactly what I needed to know.",
-  meet_frequency:"Perfect, I'll plan around that.",
-  diff_to_discuss:"Thank you for trusting me with that.",
-  college_issue:"Thank you — I'll take it up.",
-  help_me:"Of course. That's what I'm here for.",
-  plan_problem:"Good — naming the problem is half the work.",
-  plan_skill:"That's a strong choice.",
-  plan_action:"That's a clear, doable first step. 👏",
-  plan_support:"Noted — I'll hold myself to that.",
-  plan_when:"Perfect. That date is in my diary."
-};
-var ACK_TEXT = ["Thanks for sharing that.","Got it, thank you.","Noted — that helps.","That's useful to know.",
-  "Thank you for being open.","Right, I've noted that.","Okay, understood.","Thanks for telling me."];
-var ACK_POS = ["That's lovely to hear! 😊","Great to know! 🌟","Wonderful — keep it up!","That's really good news. 🙌"];
-var ACK_MID = ["Okay, thanks.","Got it.","Noted.","Fair enough."];
-var ACK_NEG = ["Thanks for being honest — that's genuinely useful.","I'm glad you told me. That's exactly what we should work on.","Thank you for saying that. Let's improve it together.","That's okay — plenty of students start here."];
-var ackTick = 0;
-function pickRot(arr){ ackTick++; return arr[ackTick % arr.length]; }
-
-function ackFor(step, val, first){
-  var name = first ? first : '';
-  var base = ACK_STEP[step.id];
-  if(step.type === 'scale'){
-    var n = Number(val);
-    base = base || (n <= 2 ? pickRot(ACK_NEG) : n === 3 ? pickRot(ACK_MID) : pickRot(ACK_POS));
-  } else if(step.type === 'yesno'){
-    base = base || (val === 'Yes' ? 'Noted 👍' : 'Okay, no problem.');
-  } else if(step.type === 'text'){
-    base = base || pickRot(ACK_TEXT);
-  } else if(step.type === 'multi'){
-    base = base || 'Got it — ' + (val && val.length ? val.slice(0,3).join(', ') + (val.length>3 ? ' and more' : '') : 'noted') + '.';
-  } else if(step.type === 'grid'){
-    base = base || 'Thanks — that gives me a good picture.';
-  } else {
-    base = base || pickRot(ACK_TEXT);
+/* Offline, rule-based reply engine for Mitra. Kept as source reference; the same
+   code is inlined into mentor-student-portal.html so the page remains one file. */
+var ACK_NEUTRAL = ["Thanks for telling me.", "I hear you.", "That gives me a clearer picture."];
+var replyIndex = 0;
+function replyPick(a){ return a[(replyIndex++) % a.length]; }
+function replyContains(text, re){ return re.test(String(text || '')); }
+function replyNatural(v){
+  if(Array.isArray(v)) return v.join(', ');
+  if(v && typeof v === 'object') return Object.keys(v).map(function(k){ return k + ': ' + qualWord(v[k]); }).join('; ');
+  return String(v == null ? '' : v).trim();
+}
+function replyShort(v){
+  var s = String(v || '').trim().replace(/\s+/g, ' ');
+  return s.length > 85 ? s.slice(0,82).replace(/\s+\S*$/, '') + '…' : s;
+}
+function replyTopic(step){
+  var id=step.id;
+  if(/^(family_|home_|siblings|financial)/.test(id)) return 'home';
+  if(/^(feel|classroom|bother|adjust|teachers|stress_|strength|improve_area|motivation|demotivators|time_balance|habit_change)/.test(id)) return 'wellbeing';
+  if(/^(hard_|enjoy|prep_exams|understand|revise|study_time|assignments|academic_|target|study_|notes|online_resources|time_manage|distractions|plan_help)/.test(id)) return 'academics';
+  if(/^(attendance_|absence_|improve_regularity)/.test(id)) return 'attendance';
+  if(/^(prog_|languages|projects|interest_areas|events|portfolio|skill_next)/.test(id)) return 'technical';
+  if(/^(after_grad|career_|higher_studies|phd_interest|competitive_exam|entrepreneur|skills_needed|prep_now|placement_|resume|mock_|english_comfort|soft_)/.test(id)) return 'career';
+  if(/^(mentor_|meet_frequency|diff_to_discuss|college_issue|help_me)/.test(id)) return 'mentor';
+  return 'plan';
+}
+function replyIsNo(v){ return /^(no|none|nothing|nope|nah|not really|not yet|never|nil|n\/a|no one|not decided yet|not sure yet|not sure|i'm not sure|i am not sure|no idea|i don't know|i do not know|prefer not to say|not right now|only child)$/i.test(String(v).trim()); }
+function replyIsDifficult(v){ return /\b(stress(?:ed|ful)?|anxious|anxiety|depress(?:ed|ion)?|sad|lonely|alone|overwhelm(?:ed|ing)?|scared|afraid|bully(?:ing|ied)?|harass(?:ment|ed)?|abuse(?:d)?|violence|fight(?:ing)?|unwell|sick|hospital|illness|died|death|passed away|grief|struggl(?:e|ing)|hardship|debt|cannot afford|can't afford|no money|financial problem|pressure|fail(?:ed|ing|ure)?|backlog|arrear|lost my job)\b/i.test(v); }
+function replyIsPositive(v){ return /\b(good|great|fine|happy|supportive|enjoy|love|excellent|comfortable|confident|well|better|improving|excited|proud|okay)\b/i.test(v) && !/\b(not|never|hardly|no|isn't|aren't|wasn't|don't|can't|cannot)\s+(?:\w+\s+){0,2}(?:good|great|fine|happy|supportive|comfortable|confident|well|okay)\b/i.test(v); }
+function replyIsCrisis(v){ return /\b(suicid(?:e|al)|self[- ]harm|kill myself|end my life|want to die|don't want to live|do not want to live|hurt myself|ending it all)\b/i.test(v); }
+function replyHasNegation(v){ return /\b(?:not|never|no|hardly|don't|do not|can't|cannot|isn't|wasn't|aren't|without)\b/i.test(v); }
+function replyIsSkip(v){ return v === '' || v === '— skipped —' || /^prefer not to say$/i.test(v); }
+function replyLead(step, v){
+  var topic = replyTopic(step);
+  if(replyIsCrisis(v)) return "I'm sorry you're carrying this. You deserve help from a real person right now. If you might hurt yourself or are in immediate danger, contact local emergency services or go to the nearest hospital; please tell a trusted person or your college counsellor now. This chat cannot provide emergency support.";
+  if(replyIsSkip(v)) return "That's okay — you can leave this one unanswered.";
+  if(replyIsDifficult(v)){
+    if(topic === 'home') return "That sounds difficult to deal with at home. Thank you for trusting me with it; your mentor can discuss practical support with you.";
+    if(topic === 'wellbeing') return "That sounds heavy. Thank you for telling me; you don't have to handle it alone. If you'd like, your mentor can arrange a private conversation.";
+    if(topic === 'attendance') return "It sounds like there's a real reason behind the absences. Let's focus on support rather than blame.";
+    return "That sounds challenging. Thank you for explaining what's going on; let's find a manageable next step.";
   }
-  if(name && Math.random() < 0.35) base = base + ' ' + name;
-  return base;
+  if(replyIsNo(v)){
+    if(topic === 'home') return "Thanks for being clear — there is no need to explain more unless you want to.";
+    if(topic === 'technical') return "Not having started yet is completely okay. We can choose one small place to begin.";
+    if(topic === 'career') return "It's okay not to have decided yet. Exploring a few paths is a useful first step.";
+    return "That's okay — we can work from where you are now.";
+  }
+  if(replyIsPositive(v) && !replyHasNegation(v)) return "I'm glad that part is going well. Let's build on it.";
+  return replyPick(ACK_NEUTRAL);
+}
+/* Be conservative: offline heuristics cannot truly understand arbitrary prose.
+   Only reject unmistakable filler/noise; ask for clarity for ambiguous plan goals.
+   Never reject a sensitive disclosure merely because its words are unfamiliar. */
+function replyQuality(step, value){
+  if(!step || step.type !== 'text') return 'ok';
+  var text=String(value || '').trim();
+  if(!text) return 'empty';
+  var plain=text.toLowerCase().replace(/\s+/g,' ').trim();
+  if(replyIsCrisis(text) || replyIsDifficult(text)) return 'ok';
+  if(replyIsNo(text) || /^(not sure|i'm not sure|i am not sure|don't know|do not know|no idea|nothing yet|prefer not to say)$/i.test(plain)) return 'ok';
+  if(/^(?:asdf\w*|qwer\w*|zxcv\w*|hjkl\w*|123\w*|abc+|xyz+|blah+|gibberish|random|test(?:ing)?|dummy|lorem\s+ipsum|nonsense|nil|null|undefined|\.\.+|[?!.]{2,})$/i.test(plain)) return 'noise';
+  var letters=(plain.match(/[a-z]/g)||[]).length;
+  var chars=plain.replace(/\s/g,'');
+  if(!letters && !/[\u0b80-\u0bff\u0900-\u097f]/.test(plain)) return 'noise';
+  if(/(.)\1{4,}/i.test(chars) || /^(?:[a-z]{1,3})\1{3,}$/i.test(chars)) return 'noise';
+  if(letters>=5 && !/[aeiouy]/i.test(plain) && !/[\u0b80-\u0bff\u0900-\u097f]/.test(plain)) return 'noise';
+  if(letters>=8 && /\d/.test(plain) && (plain.match(/\d/g)||[]).length>=letters) return 'noise';
+  // A one-word plan problem can be meaningful ("Maths", "attendance").
+  // But a word the local rules can't identify must be clarified, not praised.
+  if(step.id === 'plan_problem' && !/\s/.test(plain) && !/[\u0b80-\u0bff\u0900-\u097f]/.test(plain)){
+    if(!/^(?:maths?|mathematics|physics|chemistry|english|coding|programming|python|java|javascript|c\+\+|dsa|dbms|sql|ai|ml|attendance|exams?|grades?|marks?|backlogs?|arrears?|assignments?|projects?|studying|study|revision|concentration|focus|time|confidence|motivation|stress|health|fees?|money|family|sleep|transport|commute|language|placement|interviews?|communication|presentations?|internships?|college|friends|hostel|anxiety|depression)$/i.test(plain)) return 'unclear';
+  }
+  return 'ok';
+}
+function planProblemIsClear(v){
+  var text=String(v || '').trim();
+  if(replyQuality({id:'plan_problem',type:'text'},text)!=='ok') return false;
+  if(replyIsNo(text)) return false;
+  return /\b(?:maths?|mathematics|physics|chemistry|english|coding|programming|python|java|javascript|dsa|dbms|sql|ai|ml|attendance|exams?|grades?|marks?|backlogs?|arrears?|assignments?|projects?|stud(?:y|ying|ies)|revision|concentration|focus|time|confidence|motivation|stress|health|fees?|money|family|sleep|transport|commute|language|placement|interviews?|communication|presentations?|internships?|college|friends|hostel|anxiety|depression|cannot|can't|struggl\w*|difficult\w*|problem|hard|weak|behind|improve|help|need|missed|failing|failed|understand|confus\w*|worried|worry)\b/i.test(text) || /[\u0b80-\u0bff\u0900-\u097f]/.test(text);
+}
+function contextReply(step, val, answers){
+  var id=step.id, v=replyNatural(val), low=v.toLowerCase(), topic=replyTopic(step);
+  var lead=replyLead(step,v);
+  // Never turn an optional skip into praise, a diagnosis, or a promise.
+  if(replyIsSkip(v)) return lead;
+  if(replyIsCrisis(v)) return lead;
+  if(step.id === 'plan_problem' && replyIsDifficult(v)) return lead;
+  if(step.type === 'text' && replyQuality(step, v) !== 'ok') return 'I am not sure I understood that. Could you say a little more in your own words?';
+  // The meaning of a scale depends on the question. High stress_scale means
+  // GOOD coping, while high feel/prog_comfort means positive wellbeing/skills.
+  if(step.type === 'scale'){
+    var n=Number(val), lowEnd=n<=2;
+    var scaleReplies={
+      home_support: lowEnd ? 'Having little support or space to study can make things harder. Would a library or a quiet place on campus help?' : 'It helps to have support at home. What part of that works best for you?',
+      feel: lowEnd ? 'It sounds like college has been tough lately. If you want, we can explore what is weighing on you.' : 'I’m glad college feels manageable. What has helped?',
+      prog_comfort: lowEnd ? 'It’s okay to be starting with code. Would one small Python exercise a day feel doable?' : 'That confidence with coding is a strength — a small project could stretch it further.',
+      english_comfort: lowEnd ? 'Speaking up can take practice. Short, low-pressure conversations can help; your mentor can practise with you.' : 'It’s good that you feel able to communicate. Keep looking for chances to use it.',
+      stress_scale: lowEnd ? 'That sounds exhausting. It might help to talk with your mentor or counsellor, and we can start with one small coping step.' : 'It sounds like you have ways to manage pressure. What helps you most?'
+    };
+    return scaleReplies[id] || (lowEnd ? 'This sounds harder right now; we can look at one helpful step together.' : 'That sounds like an area you feel fairly confident in.');
+  }
+  if(step.type === 'grid'){
+    var weaker=Object.keys(val || {}).filter(function(k){ return Number(val[k])<=2; });
+    return weaker.length ? 'You marked ' + weaker.slice(0,2).join(' and ') + ' as areas to work on. Which one should we start with?' : 'You feel reasonably confident across these areas. Which would you like to build further?';
+  }
+  var map={
+    family_work: function(){
+      if(/\b(died|death|passed away|lost (my|our) (mother|father|parent))\b/i.test(v)) return 'I’m sorry for your loss. Thank you for trusting me with that. You do not need to explain more unless you want to.';
+      if(replyIsDifficult(v)) return lead;
+      if(/\b(unemployed|lost (his|her|their) job|out of work)\b/i.test(v)) return 'That may put pressure on your family. Would you like your mentor to help you explore support available through the college?';
+      return 'You told me ' + replyShort(v) + '. Thanks — that helps me understand your home situation.';
+    },
+    siblings: function(){ return /\b(none|only child|no siblings|don't have|do not have|no brother|no sister)\b/i.test(v) ? 'Got it — you are an only child. Thanks for telling me.' : 'It sounds like your siblings are part of your home life. Thanks for telling me about them.'; },
+    family_atmosphere: function(){ return /stressful/i.test(v) ? 'I’m sorry studying at home sometimes feels stressful. We can think about quieter spaces or support if that would help.' : /really supportive|supportive/i.test(v) ? 'It’s good to hear that home generally supports your studies.' : /prefer not/i.test(v) ? 'That’s okay — we can leave home aside.' : 'Thanks for being honest about how studying at home feels.'; },
+    financial: function(){ return /\b(fee|scholarship|money|afford|debt|loan)\b/i.test(v) ? 'Money and fees can put real pressure on studying. Would you like your mentor to help you check the college’s scholarship or fee-support options?' : lead; },
+    feel_note: function(){ return lead; },
+    classroom: function(){ return /left out|not really/i.test(v) ? 'Feeling left out in class can hurt. Would you prefer help finding a peer group or talking privately with your mentor?' : 'I’m glad you feel reasonably comfortable with classmates.'; },
+    bother: function(){ return /^yes/i.test(v) ? 'I hear that something is making study harder. You can share more only if you want to.' : /^no/i.test(v) ? 'I’m glad nothing major is getting in the way right now.' : lead; },
+    hard_subjects: function(){ return replyIsNo(v) ? 'Good to know you are not finding a particular subject difficult right now.' : 'You mentioned ' + replyShort(v) + '. Would extra practice, clearer basics, or help with doubts make the biggest difference?'; },
+    hard_reason: function(){ return 'That gives us a starting point for ' + replyShort(replyNatural(get(answers,'hard_subjects') || 'your subjects')) + '. Let’s address ' + replyShort(v).toLowerCase() + ' with one small step first.'; },
+    enjoy: function(){ return replyIsNo(v) ? 'It is okay if no subject stands out yet. Maybe a small project will help you discover an interest.' : 'I hear that ' + replyShort(v) + ' interests you. That is a useful starting point for a project or skill to build.'; },
+    academic_support: function(){ return val === 'Yes' ? 'Okay — I’ll note that you want subject help. The next question will help narrow down exactly what you need.' : 'Understood. If that changes, you can ask your mentor later.'; },
+    attendance_pct: function(){ return /Below 50%|50–65%|65–75%/.test(v) ? 'That could put your attendance at risk. Let’s look at the reasons and what support would make it easier to attend.' : /Above 85%/.test(v) ? 'Your attendance looks strong — keep up the routine that is working for you.' : 'You appear to be around the usual threshold. Checking the official attendance record could help you plan safely.'; },
+    absence_reasons: function(){ return /health/i.test(v) ? 'I’m sorry health has been affecting attendance. Your mentor can help you ask about medical documentation and a catch-up plan.' : /transport|bus|travel/i.test(v) ? 'Transport can make attendance hard even when you want to be there. Could adjusting your commute or asking about bus options help?' : /job|work|fees/i.test(v) ? 'Balancing work or fees with classes is hard. It may help to discuss practical options with your mentor.' : replyIsNo(v) ? 'Okay — there is no single reason to focus on. A small routine change might still help.' : 'Those reasons matter. Let’s find one realistic way to make attendance easier.'; },
+    study_time: function(){ return /less than an hour/i.test(v) ? 'That leaves limited time for study. Even a consistent 20-minute block can be a useful start.' : 'Knowing how much time you have will help us make a realistic plan.'; },
+    distractions: function(){ return /nothing much/i.test(v) ? 'It sounds like you can stay focused most of the time. What habit helps you do that?' : /phone|reels|games|ott/i.test(v) ? 'Phone time is an easy trap. Would a short phone-free study block feel realistic?' : /sleep|tired/i.test(v) ? 'Tiredness makes focus genuinely harder. Sleep and rest may need attention before adding study hours.' : /work at home/i.test(v) ? 'Home responsibilities can take real time. Let’s plan study around them rather than pretending they are not there.' : 'You mentioned ' + replyShort(v) + '. A study plan should account for that, not ignore it.'; },
+    prog_comfort: function(){ return lead; },
+    projects: function(){ return replyIsNo(v) ? 'No project yet is fine. A small app or simple data project could be a first step.' : 'That project sounds like something you can build on. What part did you enjoy making most?'; },
+    skill_next: function(){ return 'You picked ' + replyShort(v) + '. A small beginner project could help turn that goal into practice.'; },
+    after_grad: function(){ return /not decided/i.test(v) ? 'You do not have to decide immediately. Exploring jobs, higher studies, and your interests can help narrow things down.' : 'You are considering ' + replyShort(v) + '. We can work backwards to choose one preparation step.'; },
+    placement_started: function(){ return /not started/i.test(v) ? 'That’s okay — a small first step, like a resume draft or one practice session, is enough to begin.' : /seriously/i.test(v) ? 'You’ve already begun serious preparation. Which area needs the most attention next?' : 'Starting is often the hardest part. Let’s find a manageable next step.'; },
+    resume: function(){ return /no|needs work/i.test(v) ? 'A resume is something we can build or improve together, one section at a time.' : 'It’s good to have a resume ready; keeping it updated with projects will help.'; },
+    stress_ways: function(){ return /keep it to myself|blame myself|get anxious/i.test(v) ? 'Keeping stress to yourself can be tiring. If it feels safe, consider talking to someone you trust or your college counsellor.' : /talk to friends|talk to a teacher/i.test(v) ? 'Reaching out to someone is a helpful way to cope. Keep that option open.' : 'Thanks for sharing what you tend to do when stressed. Notice which of those ways actually helps you recover.'; },
+    stress_support: function(){ return val === 'Yes' ? 'I’m glad you’re open to talking. Please tell your mentor directly so they can help arrange a conversation; this bot cannot book one for you.' : 'That’s your choice. If you change your mind, you can talk to your mentor or college counsellor.'; },
+    mentor_support: function(){ return replyIsNo(v) ? 'That’s okay; you can ask for support whenever you need it.' : 'You’d like help with ' + replyShort(v) + '. Please also tell your mentor directly so you can agree on a specific next step.'; },
+    plan_problem: function(){ return replyIsNo(v) ? 'If no academic problem comes to mind, you can choose something you would like to improve instead.' : !planProblemIsClear(v) ? 'I may not have understood the problem yet. Could you describe what is difficult, such as a subject, attendance, or study routine?' : 'You mentioned ' + replyShort(v) + '. Let’s choose one small step to work on it.'; },
+    plan_action: function(){ return 'Your step is ' + replyShort(v) + '. Can you make it small enough to start this week?'; },
+    plan_support: function(){ return 'You asked for ' + replyShort(v) + '. Please discuss that directly with your mentor so you can agree on what is possible.'; },
+    plan_when: function(){ return 'You chose ' + fmtDay(v) + ' as your target. You can revisit the plan if circumstances change.'; }
+  };
+  if(map[id]) return map[id]();
+  // Default replies are tied to the content and topic, rather than a fixed
+  // praise phrase attached to the question. Avoid echoing sensitive text.
+  if(topic === 'home' || topic === 'wellbeing') return lead;
+  if(step.type === 'yesno') return val === 'Yes' ? 'I hear you would like help with this. Please raise it with your mentor so you can agree on a next step.' : 'Understood — you do not need that help right now. You can ask later if that changes.';
+  if(replyIsDifficult(v) || replyIsNo(v)) return lead;
+  if(/\b(?:hate|dislike|cannot understand|can't understand|don't understand|do not understand|confus(?:ed|ing)|stuck|failed|fail(?:ing)?|weak|tough|difficult|hard)\b/i.test(v))
+    return 'It sounds like ' + replyShort(v) + ' is difficult right now. Which small part would be most useful to tackle first?';
+  if(topic === 'academics') return 'You mentioned ' + replyShort(v) + '. We can use that to decide what study support would help.';
+  if(topic === 'technical') return 'You mentioned ' + replyShort(v) + '. That gives us a starting point for building your technical skills.';
+  if(topic === 'career') return 'You mentioned ' + replyShort(v) + '. Let’s choose a practical next step towards that goal.';
+  if(topic === 'mentor') return 'You mentioned ' + replyShort(v) + '. Please bring it up with your mentor directly as well.';
+  return 'You chose ' + replyShort(v) + '. Let’s keep the plan realistic and revisit it together.';
 }
 
 /* ------------------------- flow engine ------------------------- */
@@ -1076,7 +1136,7 @@ function nextStep(answers, mode){
   for(var i=0;i<STEPS.length;i++){
     var s = STEPS[i];
     if(answers[s.id]) continue;
-    if(mode === 'quick' && !(s.core || s.plan || s.always)) continue;
+    if(mode === 'quick' && !(s.core || s.plan || s.always || s.adaptive)) continue;
     if(s.when){ var ok=false; try{ ok = !!s.when(answers, mode); }catch(e){ ok=false; } if(!ok) continue; }
     return s;
   }
@@ -1165,6 +1225,11 @@ function computeFlags(a){
   if(get(a,'family_atmosphere') === 'Stressful at times') add('med','Stressful atmosphere at home');
   if(get(a,'family_stress')) add('high','Family circumstances affecting studies — handle sensitively');
   if(get(a,'financial')) add('high','Financial / personal difficulty shared — check welfare schemes');
+  Object.keys(a).forEach(function(id){
+    var item = a[id], st = stepById(id);
+    if(st && st.type === 'text' && item && replyIsCrisis(String(item.v || '')))
+      add('high','Urgent wellbeing disclosure — mentor should reach out promptly and connect the student with qualified support');
+  });
   if(anyOf(a,'classroom',['Not really comfortable','Sometimes I feel left out'])) add('med','Not fully at ease with classmates');
   if(anyOf(a,'teachers',['Not really','I avoid it'])) add('low','Hesitant to approach teachers');
   if(hasOpt(a,'adjust','A lot of adjusting')) add('med','Finding it hard to adjust to college life');
@@ -1483,6 +1548,7 @@ function renderTranscript(){
     botSay(s.q);
     var ans = dr.answers[id];
     meSay(ans ? (ans.d === '' || ans.d === undefined ? '— skipped —' : ans.d) : '— skipped —');
+    if(ans) botSay(esc(contextReply(s, ans.v, dr.answers)).replace(/\n/g,'<br>'), true, true);
   });
   botSay('(carrying on from where you stopped…)');
   updateProgress();
@@ -1503,13 +1569,16 @@ function askNext(silent){
 }
 function commit(step, val){
   var dr = CUR.student.draft;
+  if(dr.answers[step.id]) return;
+  compEl.innerHTML = '';  // disable stale buttons while Mitra replies
+  var previousAnswers = Object.assign({}, dr.answers);
   dr.answers[step.id] = { v:val, d:displayOf(step, val), t:new Date().toISOString() };
   if(dr.order.indexOf(step.id) === -1) dr.order.push(step.id);
   saveDraft();
   updateProgress();
   var first = firstName(CUR.student.name);
   typing(function(){
-    botSay(ackFor(step, val, first), false, true);
+    botSay(esc(contextReply(step, val, previousAnswers)).replace(/\n/g,'<br>'), true, true);
     setTimeout(function(){ askNext(true); }, 340);
   });
 }
@@ -1537,6 +1606,25 @@ function renderComposer(step){
     var doSend = function(){
       var v = inp.value.trim();
       if(!v){ if(step.optional){ meSay('— skipped —'); commit(step, ''); return; } toast('Type a short answer, or skip this one.'); return; }
+      if(step.type === 'text'){
+        var quality = replyQuality(step, v);
+        if(quality === 'noise' || quality === 'unclear'){
+          var msg = quality === 'noise' ?
+            'I may have misunderstood that answer. Could you write it in your own words? For example, “Maths basics are hard” or “I need help with attendance”.' :
+            'Could you tell me a little more about the problem? For example, “I struggle with Python”, “low attendance”, or “I cannot focus while studying”.';
+          var hint = compEl.querySelector('.answer-clarify');
+          if(!hint){ hint = document.createElement('div'); hint.className = 'note warn answer-clarify'; hint.style.marginTop='9px'; compEl.appendChild(hint); }
+          hint.textContent = msg;
+          inp.focus(); inp.select();
+          return; // no transcript entry, no stored answer, no false praise
+        }
+        if(step.id === 'plan_problem' && !planProblemIsClear(v) && !replyIsNo(v) && !replyIsCrisis(v) && !replyIsDifficult(v)){
+          var hint2 = compEl.querySelector('.answer-clarify');
+          if(!hint2){ hint2 = document.createElement('div'); hint2.className='note warn answer-clarify'; hint2.style.marginTop='9px'; compEl.appendChild(hint2); }
+          hint2.textContent = 'I am not sure what the problem is yet. Could you mention the subject or situation and what is difficult?';
+          inp.focus(); inp.select(); return;
+        }
+      }
       meSay(displayOf(step, v)); commit(step, v);
     };
     send.onclick = doSend;
@@ -1572,50 +1660,44 @@ function renderComposer(step){
   }
 
   if(step.type === 'multi'){
-    var sel = [];
+    var sel = [], timer = null, other = null;
     var c2 = document.createElement('div'); c2.className = 'chips';
+    function submitSelected(){
+      if(timer) clearTimeout(timer);
+      if(CUR.student.draft.answers[step.id]) return;
+      var picked = sel.slice();
+      if(other && other.value.trim()) picked.push(other.value.trim());
+      if(!picked.length) return;
+      meSay(picked.join(', ')); commit(step, picked);
+    }
+    function scheduleSubmit(){
+      if(timer) clearTimeout(timer);
+      if(sel.length || (other && other.value.trim())) timer = setTimeout(submitSelected, 1800);
+    }
     step.opts.forEach(function(o){
       var b = document.createElement('button'); b.className = 'chip'; b.textContent = o;
       b.onclick = function(){
-        // Single click direct answer when no "other" text is typed
-        if(!step.allowOther){
-          meSay(o); commit(step, [o]);
-          return;
-        }
         var i = sel.indexOf(o);
-        if(i === -1){ sel.push(o); b.classList.add('on'); } else { sel.splice(i,1); b.classList.remove('on'); }
-        if(confBtn) confBtn.disabled = sel.length === 0;
+        if(i === -1){ sel.push(o); b.classList.add('on'); }
+        else { sel.splice(i,1); b.classList.remove('on'); }
+        scheduleSubmit();
       };
       c2.appendChild(b);
     });
     compEl.appendChild(c2);
-
-    var confBtn = null;
     if(step.allowOther){
-      var orow = document.createElement('div'); orow.className = 'confirm-bar';
-      var other = document.createElement('input'); other.type = 'text';
-      other.placeholder = 'Or type another subject / reason…'; other.style.maxWidth = '300px';
-      orow.appendChild(other);
-      confBtn = document.createElement('button'); confBtn.className = 'btn-confirm';
-      confBtn.textContent = '✓ Confirm selection'; confBtn.disabled = true;
-      confBtn.onclick = function(){
-        var v = sel.slice();
-        if(other.value.trim()) v.push(other.value.trim());
-        if(!v.length){ toast('Pick at least one, please.'); return; }
-        meSay(v.join(', ')); commit(step, v);
-      };
-      other.addEventListener('input', function(){
-        confBtn.disabled = (sel.length === 0 && !other.value.trim());
-      });
-      other.addEventListener('keydown', function(e){ if(e.key === 'Enter') confBtn.click(); });
-      orow.appendChild(confBtn);
-      compEl.appendChild(orow);
-      var tip = document.createElement('div'); tip.className = 'hint';
-      tip.style.marginTop = '6px';
-      tip.textContent = '💡 Tip: Click options to select, then click "Confirm selection" when ready.';
-      compEl.appendChild(tip);
+      other = document.createElement('input'); other.type = 'text';
+      other.placeholder = 'Or type another answer…'; other.style.maxWidth = '300px';
+      other.style.marginTop = '8px';
+      other.addEventListener('input', scheduleSubmit);
+      other.addEventListener('keydown', function(e){ if(e.key === 'Enter') submitSelected(); });
+      compEl.appendChild(other);
     }
-    if(step.optional) compEl.appendChild(skipBtn(step, null, function(){ meSay('— skipped —'); commit(step, ''); }));
+    var tip = document.createElement('div'); tip.className = 'hint';
+    tip.style.marginTop = '6px';
+    tip.textContent = 'Select as many as you like. Mitra continues automatically after you stop selecting.';
+    compEl.appendChild(tip);
+    if(step.optional) compEl.appendChild(skipBtn(step, null, function(){ if(timer) clearTimeout(timer); meSay('— skipped —'); commit(step, ''); }));
     return;
   }
 
@@ -1700,84 +1782,358 @@ function renderComposer(step){
 
 /* ------------------------- finish ------------------------- */
 
-/* ------------------------- GOOGLE SHEETS CLOUD SYNC ------------------------- */
+/* ------------------------- GOOGLE SHEETS CLOUD SYNC -------------------------
+ *  This replaces the old "no-cors fetch resolved = success" logic, which
+ *  produced false positives. Nothing here claims success without reading the
+ *  sheet back.
+ * -------------------------------------------------------------------------- */
+var CLOUD = { connected: false, lastResult: null, checking: false };
+var K_QUEUE = 'mconnect2.queue';
+
+/* ---- URL (localStorage -> baked-in default -> page-injected config) ---- */
+/* ---- CONFIGURED APPS SCRIPT URL (baked in by set_gs_url.py) ---- */
+var DEFAULT_GS_URL = 'https://script.google.com/macros/s/AKfycbyTn0YzkaYGOvoFdPYqzqTuqprbmfV5Ga8bzSm88IzahRRWsPuIUuq8803QT_7mdtwEMw/exec';
+function validGsUrl(u){ u = String(u == null ? '' : u).trim(); return /^https?:\/\/\S+$/.test(u) ? u : ''; }
 function getGScriptUrl(){
-  return store.get(K_GSYNC, '');
+  var u = validGsUrl(store.get(K_GSYNC, ''));
+  if(u) return u;
+  u = validGsUrl(window.MENTORCONNECT_GS_URL);
+  if(u) return u;
+  return validGsUrl(DEFAULT_GS_URL);   /* placeholder / blank = no cloud, never a bogus request */
 }
-function setGScriptUrl(u){
-  store.set(K_GSYNC, (u || '').trim());
+function setGScriptUrl(u){ store.set(K_GSYNC, (u || '').trim()); }
+
+/* ------------------------------ QUEUE ---------------------------------- */
+function queueGet(){ try { return JSON.parse(store.get(K_QUEUE, '[]')) || []; } catch(e){ return []; } }
+function queueSet(q){ store.set(K_QUEUE, JSON.stringify(q)); }
+function queueAdd(item){
+  var q = queueGet();
+  for(var i=0;i<q.length;i++){ if(q[i].meeting.sessionId === item.meeting.sessionId) return; }
+  item.attempts = 0; item.queuedAt = new Date().toISOString();
+  q.push(item); queueSet(q);
+}
+function queueRemove(sessionId){
+  queueSet(queueGet().filter(function(x){ return x.meeting.sessionId !== sessionId; }));
+}
+function queuePending(){ return queueGet().length; }
+
+/* --------------------------- LOW LEVEL CALLS ---------------------------- */
+function gsUrlWith(url, query){
+  return url + (url.indexOf('?') === -1 ? '?' : '&') + query + '&_=' + Date.now();
 }
 
-function syncMeetingToCloud(student, meeting){
+/* POST as text/plain: no CORS preflight, works from file:// and hosted pages.
+   The response is opaque, so this call can NEVER prove a write happened. */
+function gsPost(payload){
   var url = getGScriptUrl();
-  if(!url) return; // not configured yet
-  var payload = {
+  return fetch(url, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+}
+
+/* GET is the only request whose body we can actually read back. */
+function gsGet(query){
+  var url = getGScriptUrl();
+  if(!url) return Promise.reject(new Error('No Apps Script URL configured.'));
+  return fetch(gsUrlWith(url, query), { method: 'GET', redirect: 'follow' })
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function(t){
+      var data;
+      try { data = JSON.parse(t); }
+      catch(e){
+        throw new Error('Google returned a web page instead of JSON — this usually means the deployment access is not set to "Anyone", so Google asked for a login.');
+      }
+      return data;
+    });
+}
+
+/* The deployed Apps Script may be the newer diagnostic build (status:'ok',
+   sessionIds) or the earlier one (status:'success', ids nested in
+   students[].meetings[]). Support both; never assume the newer shape. */
+function gsOk(data){ return !!data && (data.status === 'ok' || data.status === 'success'); }
+function gsSessionIds(data){
+  if(!data) return [];
+  if(Array.isArray(data.sessionIds)) return data.sessionIds;
+  var ids = [];
+  (data.students || []).forEach(function(st){
+    (st.meetings || []).forEach(function(m){ if(m && m.sessionId) ids.push(m.sessionId); });
+  });
+  return ids;
+}
+function gsBackendIsOld(data){
+  return !!data && data.status === 'success' && !Array.isArray(data.sessionIds);
+}
+var REDEPLOY_HINT = 'Redeploy google-apps-script.js (Deploy → Manage deployments → Edit → Version: New version) to enable this check.';
+
+/* ------------------------- SAVE ONE MEETING ----------------------------- */
+function buildPayload(student, meeting){
+  if(!meeting.sessionId){
+    meeting.sessionId = 'S' + String(student.reg).replace(/[^A-Za-z0-9]/g,'') + '-' + Date.now();
+  }
+  var flags = computeFlags(meeting.answers || {});
+  return {
     action: 'submitMeeting',
     student: {
-      reg: student.reg,
-      name: student.name,
-      branch: student.branch,
-      sem: student.sem,
-      note: student.note || '',
-      reviewed: !!student.reviewed
+      reg: student.reg, name: student.name, branch: student.branch, sem: student.sem,
+      note: student.note || '', reviewed: !!student.reviewed
     },
     meeting: meeting,
-    flags: computeFlags(meeting.answers || {}),
-    attentionLevel: flagLabel(computeFlags(meeting.answers || {}))
+    flags: flags,
+    attentionLevel: flagLabel(flags)
   };
-
-  try{
-    // Use no-cors mode so browser never blocks Google Apps Script redirects
-    fetch(url, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(function(){
-      console.log('Meeting synced to Google Sheet');
-    }).catch(function(err){
-      console.warn('Google Sheet background sync notice:', err);
-    });
-  }catch(e){
-    console.warn('Sync failed:', e);
-  }
 }
 
-function fetchAllFromCloud(cb){
-  var url = getGScriptUrl();
-  if(!url){
-    if(cb) cb(false, 'No Google Apps Script URL configured yet.');
-    return;
+/* Save locally first, always. Then try the cloud and VERIFY it. */
+function saveAndSync(student, meeting, cb){
+  var payload = buildPayload(student, meeting);
+  queueAdd({ student: payload.student, meeting: meeting });
+
+  gsPost(payload).catch(function(){
+    /* even the opaque POST can be rejected outright (bad URL / offline) */
+    return Promise.resolve();
+  }).then(function(){
+    return verifySubmission(meeting.sessionId, 0);
+  }).then(function(found){
+    if(found){
+      queueRemove(meeting.sessionId);
+      CLOUD.connected = true;
+      updateCloudBadge();
+      if(cb) cb(true, 'Synced to Google Sheets.');
+    } else {
+      if(cb) cb(false, 'Saved on this device. The Google Sheet did not confirm the row — it is queued and will retry.');
+      updateCloudBadge();
+    }
+  });
+}
+
+/* Ask the sheet whether a given session id is really there. */
+function verifySubmission(sessionId, attempt){
+  attempt = attempt || 0;
+  return gsGet('action=getAll').then(function(data){
+    if(gsOk(data)){
+      return gsSessionIds(data).indexOf(sessionId) !== -1;
+    }
+    return false;
+  }).catch(function(){
+    /* read-back failed (offline / wrong URL) — retry once, then report honestly */
+    if(attempt < 1){
+      return new Promise(function(res){ setTimeout(res, 1500); })
+        .then(function(){ return verifySubmission(sessionId, attempt + 1); });
+    }
+    return false;
+  });
+}
+
+/* Re-send anything still waiting. Called on load, after every save, and by the
+   "Retry" button. */
+function flushQueue(cb){
+  var q = queueGet();
+  if(!q.length){ if(cb) cb(0, 0); return; }
+  if(!getGScriptUrl()){ if(cb) cb(0, q.length); return; }
+
+  var done = 0, left = 0, i = 0;
+  function step(){
+    if(i >= q.length){ if(cb) cb(done, left); return; }
+    var item = q[i++];
+    gsPost(buildPayload(item.student, item.meeting))
+      .catch(function(){ return Promise.resolve(); })
+      .then(function(){ return verifySubmission(item.meeting.sessionId, 0); })
+      .then(function(found){
+        if(found){ queueRemove(item.meeting.sessionId); done++; }
+        else { left++; }
+        step();
+      });
   }
-  var fetchUrl = url + (url.indexOf('?') === -1 ? '?' : '&') + 'action=getAll&t=' + Date.now();
-  fetch(fetchUrl)
-    .then(function(res){ return res.json(); })
-    .then(function(data){
-      if(data && data.status === 'success' && Array.isArray(data.students)){
-        var list = allStudents();
-        var incoming = data.students;
-        var updatedCount = 0;
-        incoming.forEach(function(inc){
-          var idx = findIdx(list, inc.reg);
-          if(idx >= 0){
-            // merge meetings
-            if(Array.isArray(inc.meetings) && inc.meetings.length){
-              list[idx].meetings = inc.meetings;
-            }
-            if(inc.note) list[idx].note = inc.note;
-            if(inc.reviewed !== undefined) list[idx].reviewed = inc.reviewed;
-            updatedCount++;
-          }
-        });
-        saveStudents(list);
-        if(cb) cb(true, 'Synced ' + updatedCount + ' student records from Google Sheets!');
+  step();
+}
+
+/* --------------------------- PULL FROM SHEET ---------------------------- */
+function fetchAllFromCloud(cb){
+  if(!getGScriptUrl()){ if(cb) cb(false, 'No Google Apps Script URL configured yet.'); return; }
+
+  gsGet('action=getAll').then(function(data){
+    CLOUD.connected = true; updateCloudBadge();
+    if(!(gsOk(data) && Array.isArray(data.students))){
+      if(cb) cb(false, (data && data.message) || 'Unexpected response from the Apps Script.');
+      return;
+    }
+    var list = allStudents();
+    var incoming = data.students;
+    var seen = {}, added = 0, updated = 0;
+
+    incoming.forEach(function(inc){
+      if(!inc || !inc.reg) return;
+      seen[String(inc.reg).toUpperCase()] = true;
+      var idx = findIdx(list, inc.reg);
+      if(idx >= 0){
+        if(Array.isArray(inc.meetings) && inc.meetings.length) list[idx].meetings = inc.meetings;
+        if(inc.note) list[idx].note = inc.note;
+        if(inc.reviewed !== undefined) list[idx].reviewed = inc.reviewed;
+        updated++;
       } else {
-        if(cb) cb(false, (data && data.message) || 'Unexpected response format from Google Sheets');
+        /* a student who is not in the local roster (e.g. a test row) still gets
+           shown, so nothing silently disappears */
+        list.push({
+          reg: inc.reg, name: inc.name || inc.reg, branch: inc.branch || BRANCH,
+          sem: inc.sem || 'S5', note: inc.note || '', reviewed: !!inc.reviewed,
+          meetings: Array.isArray(inc.meetings) ? inc.meetings : []
+        });
+        added++;
       }
-    })
-    .catch(function(err){
-      if(cb) cb(false, 'Could not connect to Google Sheets. Verify the Web App URL.');
     });
+    saveStudents(list);
+    var msg = 'Pulled ' + incoming.length + ' student record(s) from the sheet';
+    if(added) msg += ' — ' + added + ' were not in the local roster and were added (test rows show up here too)';
+    if(cb) cb(true, msg + '.');
+  }).catch(function(err){
+    CLOUD.connected = false; updateCloudBadge();
+    if(cb) cb(false, err.message || 'Could not reach the Apps Script.');
+  });
+}
+
+/* ------------------------- HONEST DIAGNOSIS ----------------------------- */
+/* Each step is reported with the raw evidence. No step says "works" unless the
+   sheet itself confirmed it. */
+function runDiagnosis(report){
+  var steps = [
+    {
+      name: '1. Is the web app alive, with access set to "Anyone"?',
+      run: function(){
+        return gsGet('action=getAll').then(function(d){
+          if(gsOk(d) && Array.isArray(d.students)){
+            var detail = 'Apps Script answered. ' + (d.students || []).length + ' student record(s) readable.';
+            if(gsBackendIsOld(d)) detail += ' Note: the deployed script is the earlier version (it has no ping/status actions) — checks 1, 3 and 4 still measure real behaviour.';
+            return { pass: true, detail: detail };
+          }
+          return { pass: false, detail: 'The script answered but not as expected: ' + ((d && d.message) || 'unknown reply'),
+            fix: 'Open the /exec URL in a tab. If Google asks you to sign in, the deployment access is not "Anyone".' };
+        });
+      }
+    },
+    {
+      name: '2. Which spreadsheet is the script writing to?',
+      run: function(){
+        return gsGet('action=status').then(function(d){
+          if(d && d.status === 'ok' && d.info){
+            return { pass: true, detail: 'Bound to "' + d.info.spreadsheetName + '" (' + d.info.spreadsheetId + '), Meetings rows: ' + d.info.meetingsRows + '.' };
+          }
+          if(d && /unknown get action/i.test(String(d.message || ''))){
+            return { pass: true, warn: true,
+              detail: 'The deployed script does not support the status action, so it cannot name the spreadsheet. Submissions still work — checks 3 and 4 below measure them directly.',
+              fix: REDEPLOY_HINT };
+          }
+          return { pass: false, detail: (d && d.message) || 'No spreadsheet info returned.',
+            fix: 'Recreate the script from Extensions → Apps Script inside your sheet, then deploy again.' };
+        });
+      }
+    },
+    {
+      name: '3. Does a real row get written? (measured, not guessed)',
+      run: function(){
+        var before = -1;
+        return gsGet('action=getAll').then(function(d){
+          before = gsSessionIds(d).length;
+        }).catch(function(){ before = -1; })
+        .then(function(){
+          var id = 'DIAG-' + Date.now();
+          var payload = buildPayload(
+            { reg: 'TEST001', name: 'Mentor Connection Test', branch: BRANCH, sem: 'S5', note: 'diagnostic row', reviewed: false },
+            { no: 1, date: new Date().toISOString().slice(0,10),
+              discussions: 'Diagnostic test row from MentorConnect.',
+              suggestions: 'If you can see this row, the connection is genuinely working. You may delete it.',
+              response: 'Test submission.', sessionId: id }
+          );
+          return gsPost(payload).catch(function(){}).then(function(){
+            return new Promise(function(res){ setTimeout(res, 3000); })
+              .then(function(){ return gsGet('action=getAll'); })
+              .then(function(d){
+                var after = gsSessionIds(d).length;
+                if(before >= 0 && after > before){
+                  return { pass: true, detail: 'Records in the sheet went from ' + before + ' to ' + after + ' after a test write (id ' + id + '). The write is confirmed — you can delete that test row.' };
+                }
+                if(before >= 0 && after === before){
+                  return { pass: false, detail: 'The sheet still shows ' + before + ' record(s) after the test write. The write did not land.',
+                    fix: 'Most likely the deployment is not the current code. Apps Script → Deploy → Manage deployments → Edit → Version: New version → Deploy, then run this again. Also check the Executions page for a failed run.' };
+                }
+                return { pass: false, detail: 'Could not measure the sheet before and after.',
+                  fix: 'Open the /exec URL with ?action=getAll in a new tab and look at the raw reply.' };
+              });
+          });
+        });
+      }
+    },
+    {
+      name: '4. Can the portal read the sheet back?',
+      run: function(){
+        return gsGet('action=getAll').then(function(d){
+          if(gsOk(d) && Array.isArray(d.students)){
+            return { pass: true, detail: 'Read back ' + (d.students.length || 0) + ' student record(s). "Pull Responses Now" uses this same path.' };
+          }
+          return { pass: false, detail: (d && d.message) || 'Read failed.' };
+        });
+      }
+    }
+  ];
+
+  var i = 0;
+  function next(){
+    if(i >= steps.length){ if(report) report(null); return; }
+    var s = steps[i++];
+    if(report) report({ state: 'running', name: s.name });
+    s.run().then(function(r){
+      if(report) report({ state: 'done', name: s.name, pass: r.pass, detail: r.detail, fix: r.fix });
+      if(!r.pass){ if(report) report({ state: 'stop' }); return; }
+      next();
+    }).catch(function(err){
+      if(report) report({ state: 'done', name: s.name, pass: false, detail: err.message || String(err),
+        fix: 'If the URL ends in /dev, replace it with /exec. If the page was opened from a file download, open it over https instead.' });
+      if(report) report({ state: 'stop' });
+    });
+  }
+  next();
+}
+
+/* --------------------------- CLOUD BADGE -------------------------------- */
+function updateCloudBadge(){
+  var el = document.getElementById('cloudBadge');
+  if(!el) return;
+  var pending = queuePending();
+  var url = getGScriptUrl();
+  el.classList.remove('on','off','wait');
+  if(!url){
+    el.classList.add('off');
+    el.innerHTML = '☁️ Sheets: not set up';
+    el.title = 'No Google Apps Script URL. Open ☁️ Cloud Sync.';
+  } else if(CLOUD.connected && pending === 0){
+    el.classList.add('on');
+    el.innerHTML = '☁️ Sheets: connected';
+    el.title = 'Last verified: ' + (CLOUD.lastResult || 'this session');
+  } else if(pending > 0){
+    el.classList.add('wait');
+    el.innerHTML = '☁️ Sheets: ' + pending + ' pending';
+    el.title = 'These meetings are saved on this device and will retry automatically. Click to retry now.';
+  } else {
+    el.classList.add('off');
+    el.innerHTML = '☁️ Sheets: not verified';
+    el.title = 'Click to test the connection.';
+  }
+  el.onclick = openSyncModal;
+}
+
+/* ---------------------- AUTO-RETRY ON EVERY LOAD ------------------------ */
+function bootCloud(){
+  updateCloudBadge();
+  if(!getGScriptUrl()) return;
+  flushQueue(function(){
+    updateCloudBadge();
+    if(queuePending() === 0) CLOUD.connected = true;
+  });
 }
 
 function finishSession(){
@@ -1799,7 +2155,17 @@ function finishSession(){
   CUR.student.meetings.push(meeting);
   CUR.student.draft = null;
   putStudent(CUR.student);
-  syncMeetingToCloud(CUR.student, meeting);
+  saveAndSync(CUR.student, meeting, function(synced){
+    var el = document.getElementById('cloudNote');
+    if(!el) return;
+    if(synced){
+      el.className = 'note ok';
+      el.innerHTML = '☁️ Added to your mentor\'s record.';
+    } else {
+      el.className = 'note warn';
+      el.innerHTML = 'Saved safely on this device. It will be sent to your mentor automatically when the connection is available — no need to answer again.';
+    }
+  });
   renderDone(meeting);
   showScreen('sc-done');
   document.getElementById('btnExitChat').classList.add('hide');
@@ -1810,7 +2176,8 @@ function renderDone(meeting){
   var flags = computeFlags(a);
   var first = firstName(CUR.student.name);
   var html = '<h1>Thank you, ' + esc(first) + ' 🌟</h1>' +
-    '<p class="muted">You answered ' + askedCount(a) + ' questions. Your mentor can now see this and it has been added to your mentoring record.</p>';
+    '<p class="muted">You answered ' + askedCount(a) + ' questions. Your mentor can now see this and it has been added to your mentoring record.</p>' +
+    '<div class="note" id="cloudNote" style="margin-top:10px">Saving…</div>';
 
   html += '<div class="card" style="box-shadow:none;border-color:#ddd6fe;margin:16px 0"><h3>Your action plan</h3>' +
     '<div class="kv"><b>Problem to solve</b><span>' + (get(a,'plan_problem') ? esc(get(a,'plan_problem')) : '<i>not answered</i>') + '</span></div>' +
@@ -2072,61 +2439,163 @@ document.getElementById('onlyFlag').onchange = renderDashboard;
 document.getElementById('backToDash').onclick = function(){ showScreen('sc-mentor'); };
 document.getElementById('btnPrint').onclick = function(){ window.print(); };
 
-document.getElementById('btnSyncCloud').onclick = function(){
+/* ------------------- CLOUD SYNC MODAL (honest reporting) ----------------- */
+function openSyncModal(){
   var currentUrl = getGScriptUrl();
   var box = document.getElementById('modalBox');
-  box.innerHTML = '<h2>☁️ Google Sheets Cloud Sync</h2>' +
-    '<p class="muted">Connect this mentoring tool directly to your Google Sheet so all 67 students automatically submit their responses into a single sheet in real time.</p>' +
-    '<label for="gsUrl">Google Apps Script Web App URL</label>' +
+  box.innerHTML = '<h2>☁️ Google Sheets connection</h2>' +
+    '<p class="muted">Diagnosis, not guesswork. Every step below is checked by reading your spreadsheet back — nothing is reported as working unless the sheet confirms it.</p>' +
+    '<label for="gsUrl">Google Apps Script Web App URL (must end in <b>/exec</b>)</label>' +
     '<input type="text" id="gsUrl" placeholder="https://script.google.com/macros/s/.../exec" value="' + esc(currentUrl) + '">' +
     '<div class="row" style="margin-top:14px">' +
-      '<button class="btn sm" id="saveGsUrl">Save & Pull Latest from Sheet</button>' +
-      '<button class="btn ghost sm" id="pullOnly">Pull Responses Now</button>' +
+      '<button class="btn sm" id="saveGsUrl">Save URL</button>' +
+      '<button class="btn teal sm" id="runDiag">🔍 Run full diagnosis</button>' +
+      '<button class="btn pink sm" id="retryQueue">↻ Retry queued meetings</button>' +
+      '<button class="btn ghost sm" id="pullOnly">⬇ Pull responses now</button>' +
       '<button class="btn grey sm" id="closeGs">Close</button>' +
     '</div>' +
-    '<div id="syncStatus" style="margin-top:12px"></div>' +
+    '<div class="row" style="margin-top:10px">' +
+      '<button class="btn teal sm" id="mkLink">🔗 Make student link with this URL</button>' +
+    '</div>' +
+    '<div id="linkOut" style="margin-top:10px"></div>' +
+    '<div id="syncStatus" style="margin-top:14px"></div>' +
+    '<div id="diagOut" style="margin-top:10px"></div>' +
+    '<div class="note" style="margin-top:14px" id="queueInfo"></div>' +
     '<hr style="border:0;border-top:1.4px solid #eee;margin:18px 0">' +
-    '<h3>Quick 2-minute Setup Guide</h3>' +
-    '<ol style="font-size:13.2px;line-height:1.6;color:#3b4568;padding-left:18px">' +
-      '<li>Open a Google Sheet on your Google Drive.</li>' +
-      '<li>Click <b>Extensions ➔ Apps Script</b> in the top menu.</li>' +
-      '<li>Paste the code from <b>google-apps-script.js</b> (saved in your folder).</li>' +
-      '<li>Click <b>Deploy ➔ New deployment</b> ➔ select <b>Web app</b>.</li>' +
-      '<li>Set <i>Execute as:</i> <b>Me</b>, and <i>Who has access:</i> <b>Anyone</b>.</li>' +
-      '<li>Click <b>Deploy</b> and paste the generated URL above!</li>' +
-    '</ol>';
+    '<h3 style="margin-bottom:6px">Are login credentials the problem?</h3>' +
+    '<p style="font-size:13.2px;line-height:1.65;color:#3b4568">' +
+      'Two <i>different</i> logins are involved, and mixing them up is the single most common cause of a silently empty sheet:' +
+    '</p>' +
+    '<ul style="font-size:13px;line-height:1.65;color:#3b4568;padding-left:18px">' +
+      '<li><b>Student / mentor passwords in this portal</b> (register number / mentor password) — these are only local on-screen locks. Google never sees them, so they cannot make a submission fail to appear.</li>' +
+      '<li><b>Google\'s own permission for the Web App</b> — this is the one that matters. In the deployment you must set <b>Execute as: Me</b> and <b>Who has access: Anyone</b>. If it is set to "Only myself" or "Anyone with Google account", Google answers each submission with a login page and <i>the row is never written</i>. Because a POST sent this way cannot be read back by the browser, the portal used to show a green "sent" message anyway — that message was wrong, which is why you saw success with an empty sheet.</li>' +
+    '</ul>' +
+    '<p style="font-size:13px;line-height:1.65;color:#3b4568">Step 1 of the diagnosis below is exactly the test for this: if the read-back fails, the deployment access is the culprit.</p>' +
+    '<hr style="border:0;border-top:1.4px solid #eee;margin:18px 0">' +
+    '<h3 style="margin-bottom:6px">Checklist if a step fails</h3>' +
+    '<ul style="font-size:13px;line-height:1.65;color:#3b4568;padding-left:18px">' +
+      '<li>Script opened via <b>Extensions → Apps Script</b> from the sheet you are looking at (otherwise it writes to another spreadsheet).</li>' +
+      '<li><b>Deploy → Manage deployments → Edit → Version: New version → Deploy</b> after every code change; an old version keeps answering.</li>' +
+      '<li>URL ends in <b>/exec</b>, not <b>/dev</b> or <b>/edit</b>.</li>' +
+      '<li>Rows land in the <b>Meetings</b> tab, not on Sheet1 — the script creates that tab itself.</li>' +
+      '<li>Look at the script\'s <b>Logs</b> tab and <b>Executions</b> page in Apps Script — this version records every request there.</li>' +
+    '</ul>';
 
   document.getElementById('modal').classList.add('on');
+  renderQueueInfo();
 
-  document.getElementById('saveGsUrl').onclick = function(){
-    var u = document.getElementById('gsUrl').value.trim();
+  document.getElementById('mkLink').onclick = function(){
+    var out = document.getElementById('linkOut');
+    var u = document.getElementById('gsUrl').value.trim() || getGScriptUrl();
+    if(!u){ out.innerHTML = '<div class="note warn">Paste the /exec URL first.</div>'; return; }
     setGScriptUrl(u);
-    var statusEl = document.getElementById('syncStatus');
-    statusEl.innerHTML = '<div class="note">Connecting to Google Sheet...</div>';
-    fetchAllFromCloud(function(ok, msg){
-      if(ok){
-        statusEl.innerHTML = '<div class="note ok">' + esc(msg) + '</div>';
-        renderDashboard();
-        toast('Connected to Google Sheet!');
-      } else {
-        statusEl.innerHTML = '<div class="note warn">' + esc(msg) + ' (URL saved anyway)</div>';
-      }
-    });
-  };
-
-  document.getElementById('pullOnly').onclick = function(){
-    var statusEl = document.getElementById('syncStatus');
-    statusEl.innerHTML = '<div class="note">Pulling latest responses...</div>';
-    fetchAllFromCloud(function(ok, msg){
-      statusEl.innerHTML = '<div class="note ' + (ok ? 'ok' : 'bad') + '">' + esc(msg) + '</div>';
-      if(ok){ renderDashboard(); toast('Pulled latest records!'); }
-    });
+    var base = location.href.split('?')[0].split('#')[0];
+    var link = base + '?gs=' + encodeURIComponent(u);
+    out.innerHTML = '<div class="note ok"><b>Send this exact link to your students.</b> Opening it once stores the URL in that student\'s browser, so their answers go to your sheet.' +
+      '<input type="text" id="linkBox" value="' + esc(link) + '" onclick="this.select()" style="margin-top:8px"></div>';
+    var b = document.getElementById('linkBox');
+    if(b) b.select();
   };
 
   document.getElementById('closeGs').onclick = function(){
     document.getElementById('modal').classList.remove('on');
   };
-};
+
+  document.getElementById('saveGsUrl').onclick = function(){
+    var u = document.getElementById('gsUrl').value.trim();
+    var statusEl = document.getElementById('syncStatus');
+    if(!u){ statusEl.innerHTML = '<div class="note bad">Paste the Apps Script URL first.</div>'; return; }
+    if(!/\/exec(\?|$)/.test(u) && !/\/dev(\?|$)/.test(u)){
+      statusEl.innerHTML = '<div class="note warn">That does not look like a Web App URL — it should end in <b>/exec</b>. Saved anyway.</div>';
+    }
+    setGScriptUrl(u);
+    statusEl.innerHTML = '<div class="note">URL saved. Checking it now…</div>';
+    gsGet('action=ping').catch(function(){ return null; }).then(function(d){
+      if(d && d.status === 'ok'){
+        CLOUD.connected = true; updateCloudBadge();
+        statusEl.innerHTML = '<div class="note ok"><b>Reachable.</b> Spreadsheet "' + esc(d.spreadsheet || '') + '", tabs: ' + esc((d.sheets || []).join(', ')) + '. Now run the full diagnosis to confirm a row really gets written.</div>';
+        return 'done';
+      }
+      /* older deployments have no ping action — prove reachability with getAll */
+      return gsGet('action=getAll').then(function(g){
+        if(gsOk(g) && Array.isArray(g.students)){
+          CLOUD.connected = true; updateCloudBadge();
+          statusEl.innerHTML = '<div class="note ok"><b>Reachable.</b> The script answered and returned ' + g.students.length + ' student record(s). ' +
+            (gsBackendIsOld(g) ? 'This is the earlier script version, so it cannot name the spreadsheet — ' + esc(REDEPLOY_HINT) + ' ' : '') +
+            'Run the full diagnosis to confirm a test row really gets written.</div>';
+        } else {
+          CLOUD.connected = false; updateCloudBadge();
+          statusEl.innerHTML = '<div class="note bad">The script replied with an error: ' + esc((g && g.message) || (d && d.message) || 'unknown') + '</div>';
+        }
+        return 'done';
+      });
+    }).catch(function(err){
+      CLOUD.connected = false; updateCloudBadge();
+      statusEl.innerHTML = '<div class="note bad">' + esc(err.message || String(err)) + '</div>';
+    });
+  };
+
+  document.getElementById('runDiag').onclick = function(){
+    var out = document.getElementById('diagOut');
+    out.innerHTML = '';
+    document.getElementById('syncStatus').innerHTML = '';
+    function line(html){ out.insertAdjacentHTML('beforeend', html); }
+
+    runDiagnosis(function(ev){
+      if(!ev) { CLOUD.lastResult = new Date().toLocaleString(); updateCloudBadge(); return; }
+      if(ev.state === 'running'){
+        line('<div class="note" id="diagRow">⏳ ' + esc(ev.name) + ' …</div>');
+        return;
+      }
+      var last = document.getElementById('diagRow');
+      if(ev.state === 'stop'){
+        line('<div class="note warn" style="margin-top:10px"><b>Stopped here.</b> Fix the failed step, redeploy with <b>New version</b>, then run the diagnosis again. Do not rely on the earlier green message — the sheet had no row.</div>');
+        return;
+      }
+      var cls = ev.pass ? (ev.warn ? 'warn' : 'ok') : 'bad';
+      var mark = !ev.pass ? '✗ ' : (ev.warn ? '! ' : '✓ ');
+      var html = '<div class="note ' + cls + '" style="margin-top:8px"><b>' + mark + esc(ev.name) + '</b><br>' + esc(ev.detail);
+      if(!ev.pass && ev.fix) html += '<br><b>Fix:</b> ' + esc(ev.fix);
+      html += '</div>';
+      if(last) last.outerHTML = html; else line(html);
+      if(ev.pass && ev.name.indexOf('3.') === 0){ renderQueueInfo(); }
+    });
+  };
+
+  document.getElementById('retryQueue').onclick = function(){
+    var statusEl = document.getElementById('syncStatus');
+    var n = queuePending();
+    if(!n){ statusEl.innerHTML = '<div class="note ok">Nothing is waiting — every saved meeting is confirmed in the sheet.</div>'; renderQueueInfo(); return; }
+    statusEl.innerHTML = '<div class="note">Retrying ' + n + ' queued meeting(s)…</div>';
+    flushQueue(function(done, left){
+      statusEl.innerHTML = '<div class="note ' + (left ? 'warn' : 'ok') + '">' + done + ' confirmed in the sheet, ' + left + ' still waiting.</div>';
+      renderQueueInfo(); updateCloudBadge();
+    });
+  };
+
+  document.getElementById('pullOnly').onclick = function(){
+    var statusEl = document.getElementById('syncStatus');
+    statusEl.innerHTML = '<div class="note">Reading the sheet…</div>';
+    fetchAllFromCloud(function(ok, msg){
+      statusEl.innerHTML = '<div class="note ' + (ok ? 'ok' : 'bad') + '">' + esc(msg) + '</div>';
+      if(ok){ renderDashboard(); toast('Pulled the latest records.'); }
+    });
+  };
+}
+function renderQueueInfo(){
+  var el = document.getElementById('queueInfo');
+  if(!el) return;
+  var n = queuePending(), url = getGScriptUrl();
+  if(!url){ el.className = 'note warn'; el.innerHTML = '<b>No Apps Script URL on this device.</b> Nothing can be sent from this browser until one is saved here.'; return; }
+  if(n === 0){ el.className = 'note ok'; el.innerHTML = 'Queue empty — every meeting saved on this device is also confirmed in the Google Sheet.'; return; }
+  var q = queueGet();
+  el.className = 'note warn';
+  el.innerHTML = '<b>' + n + ' meeting(s) waiting to be confirmed in the sheet.</b><br>' +
+    q.slice(0, 6).map(function(x){ return '• ' + esc(x.meeting.date || '') + ' — ' + esc(x.student.name || x.student.reg); }).join('<br>') +
+    (n > 6 ? '<br>…and ' + (n - 6) + ' more' : '') +
+    '<br><span style="font-size:12.5px">These are safe on this device. They retry automatically each time the portal opens, and with the Retry button above.</span>';
+}
+document.getElementById('btnSyncCloud').onclick = openSyncModal;
 
 document.getElementById('btnExportAll').onclick = function(){
   var list = allStudents();
@@ -2742,12 +3211,20 @@ document.addEventListener('keydown', function(e){
       'records typed here stay only in memory and downloads may be blocked. Download this HTML file and open it in Chrome/Edge/Firefox for full saving and export — ' +
       'the app previews fine here for checking the chat and the record sheet.</div>';
   }
+  var gsm = location.search.match(/[\?&]gs=([^&]+)/);
+  if(gsm){
+    try {
+      var gs = decodeURIComponent(gsm[1]);
+      if(/^https?:\/\//.test(gs)){ setGScriptUrl(gs); toast('Google Sheets link configured on this device.'); }
+    } catch(e){}
+  }
   if(/[\?&]mentor=1/.test(location.search)){ document.getElementById('roleSel').value = 'mentor'; setRole('mentor'); }
   if(/[\?&]demo=1/.test(location.search)){ loadDemo(); }
   var sess = store.get(K_SESS, null);
   if(sess && getStudent(sess)){ CUR.student = getStudent(sess); }
+  bootCloud();   /* show the sheet status badge and auto-retry anything queued */
 })();
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a41a40d298942b4a',t:'MTc5MDUwOTQzMg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a42c09f4ab6e10eb',t:'MTc5MDY5NTkyOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","spa":2}' crossorigin="anonymous"></script>
+</body>
 </html>
